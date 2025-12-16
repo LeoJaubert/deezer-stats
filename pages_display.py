@@ -18,32 +18,33 @@ def afficher_page(file_path, page):
     
     liste_colonne_dates = ["Registration Date", "Date of birth", "Paid offer start date", "Paid offer end date", "Current payment period start date", "Current payment period end date", "Try and buy start date", "Try and buy end date", "Last login date", "Last content synchronization", "Last stream on mobile", "Last stream on web", "Last stream on flow", "Registration date"]
 
-    df = pd.read_excel(file_path, sheet_name=sheet)
-    #Print title of the page
-    st.title(title)
-    st.markdown("---")
-    #Transform dataframe in dict
-    dataDict = {col: df[col].iloc[0] if len(df) > 0 else "" for col in df.columns}
-    for colonne, valeur in dataDict.items():
-        #Formatting of values------------
-        #Write 'N/A' if value is NaN
-        if pd.isna(valeur):
-            valeur = "N/A"
-        #Format date values in 'dd/mm/yyyy' format
-        if colonne in liste_colonne_dates:
-            date_obj = datetime.strptime(valeur, "%Y-%m-%d")
-            valeur = date_obj.strftime("%d/%m/%Y")
-        #Format boolean values with emojis
-        if str(valeur) == "True":
-            valeur = "✅"
-        if str(valeur) == "False":
-            valeur = "❌"
-        st.markdown(
-            f"""
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
-                <span style="font-weight: 700; color: {color}; font-size: 1.1em;">{colonne}</span>
-                <span style="color: #222; font-size: 1.05em;">{valeur}</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    with st.spinner("Chargement..."):
+        df = pd.read_excel(file_path, sheet_name=sheet)
+        #Print title of the page
+        st.title(title)
+        st.markdown("---")
+        #Transform dataframe in dict
+        dataDict = {col: df[col].iloc[0] if len(df) > 0 else "" for col in df.columns}
+        for colonne, valeur in dataDict.items():
+            #Formatting of values------------
+            #Write 'N/A' if value is NaN
+            if pd.isna(valeur):
+                valeur = "N/A"
+            #Format date values in 'dd/mm/yyyy' format
+            if colonne in liste_colonne_dates:
+                date_obj = datetime.strptime(valeur, "%Y-%m-%d")
+                valeur = date_obj.strftime("%d/%m/%Y")
+            #Format boolean values with emojis
+            if str(valeur) == "True":
+                valeur = "✅"
+            if str(valeur) == "False":
+                valeur = "❌"
+            st.markdown(
+                f"""
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="font-weight: 700; color: {color}; font-size: 1.1em;">{colonne}</span>
+                    <span style="color: #222; font-size: 1.05em;">{valeur}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
