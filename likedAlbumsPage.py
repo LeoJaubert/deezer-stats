@@ -30,7 +30,7 @@ def get_base64_image(path):
 
 def likedAlbums(file_path):
     df = pd.read_excel(file_path, sheet_name="5_favoriteAlbum")
-    st.title("🎵 Albums likés")
+    st.title("💿 Albums likés")
     st.markdown("---")
 
     albumsDict = {}

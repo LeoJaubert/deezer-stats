@@ -5,11 +5,11 @@ from datetime import datetime
 def afficher_page(file_path, page):
     #Params of different pages
     pages = {
-        "Détails du compte Deezer": {"sheet": 0, "title": "📊 Détails du compte Deezer", "color": "#ff6f00"},
-        "Profil de l'utilisateur": {"sheet": 1, "title": "🧍 Profil de l'utilisateur", "color": "#0074D9"},
-        "Notifications": {"sheet": 2, "title": "🔔 Notifications", "color": "#2ECC40"},
-        "Options de paiement": {"sheet": 9, "title": "💸 Options de paiement", "color": "#B10DC9"},
-        "Misc": {"sheet": 10, "title": "📂 Misc", "color": "#FF4136"},
+        "Détails du compte Deezer": {"sheet": "1_creationData", "title": "📊 Détails du compte Deezer", "color": "#ff6f00"},
+        "Profil de l'utilisateur": {"sheet": "2_customizationData", "title": "🧍 Profil de l'utilisateur", "color": "#0074D9"},
+        "Notifications": {"sheet": "3_setupData", "title": "🔔 Notifications", "color": "#2ECC40"},
+        "Options de paiement": {"sheet": "12_businessData", "title": "💸 Options de paiement", "color": "#B10DC9"},
+        "Misc": {"sheet": "13_navigationData", "title": "📂 Misc", "color": "#FF4136"},
     }
 
     sheet = pages[page]["sheet"]
