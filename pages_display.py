@@ -1,6 +1,6 @@
+from datetime import datetime
 import pandas as pd
 import streamlit as st
-from datetime import datetime
 
 def afficher_page(file_path, page):
     #Params of different pages
@@ -15,7 +15,7 @@ def afficher_page(file_path, page):
     sheet = pages[page]["sheet"]
     title = pages[page]["title"]
     color = pages[page]["color"]
-    
+
     liste_colonne_dates = ["Registration Date", "Date of birth", "Paid offer start date", "Paid offer end date", "Current payment period start date", "Current payment period end date", "Try and buy start date", "Try and buy end date", "Last login date", "Last content synchronization", "Last stream on mobile", "Last stream on web", "Last stream on flow", "Registration date"]
 
     with st.spinner("Chargement..."):
@@ -24,8 +24,8 @@ def afficher_page(file_path, page):
         st.title(title)
         st.markdown("---")
         #Transform dataframe in dict
-        dataDict = {col: df[col].iloc[0] if len(df) > 0 else "" for col in df.columns}
-        for colonne, valeur in dataDict.items():
+        data_dict = {col: df[col].iloc[0] if len(df) > 0 else "" for col in df.columns}
+        for colonne, valeur in data_dict.items():
             #Formatting of values------------
             #Write 'N/A' if value is NaN
             if pd.isna(valeur):

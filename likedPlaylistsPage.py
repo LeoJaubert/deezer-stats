@@ -1,7 +1,7 @@
+import base64
 import pandas as pd
 import streamlit as st
 import requests
-import base64
 
 @st.cache_data(show_spinner=False)
 def get_playlist_info_from_id(playlist_link):
