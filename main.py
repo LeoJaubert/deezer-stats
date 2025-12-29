@@ -4,6 +4,10 @@ from likedArtistsPage import likedArtists
 from likedAlbumsPage import likedAlbums
 from likedPlaylistsPage import likedPlaylists
 
+#CSS loading
+with open("config.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 if __name__ == "__main__":
     st.sidebar.image("placeholder_pics/deezer-logo-coeur.jpg")
     st.sidebar.markdown(
@@ -33,7 +37,7 @@ if __name__ == "__main__":
         unsafe_allow_html=True
     )
 
-    file_path = "stats-deezer-updated-more.xlsx"
+    file_path = "stats-deezer.xlsx"
 
     #Navigation menu
     st.sidebar.title("Navigation")

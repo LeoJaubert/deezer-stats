@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import requests
 
+#CSS styling
 st.markdown(
     """
     <style>
@@ -16,6 +17,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+#API call to obtain infos about artist
 @st.cache_data(show_spinner = False)
 def get_artist_info_from_id(artist_link):
     try:
@@ -27,17 +29,37 @@ def get_artist_info_from_id(artist_link):
         nb_fan = int(data.get("nb_fan", 0))
 
         return {
-            "img_url": data.get("picture_medium", ""),
-            "nb_album": int(data.get("nb_album", 0)),
-            "nb_fan_formatted": f"{nb_fan:,}"
+            "img_url": data["picture_medium"],
+            "nb_album": int(data["nb_album"]),
+            "nb_fan_formatted": f"{nb_fan:,}",
+            "url": url
         }
 
     except Exception:
-        return {
-            "img_url": "",
-            "nb_album": 0,
-            "nb_fan_formatted": 0
-        }
+        return None
+
+#API call to obtain the 3 top songs from tracklist
+def get_top_songs_from_tracklist(url):
+    try:
+        url = url + "/top?limit=3"
+        response = requests.get(url)
+        data = response.json()
+        
+        top_songs_dict = {}
+        
+        for track in data.get("data", []):
+            track_id = track.get("id")
+            title = track.get("title")
+            link = track.get("link")
+            
+            top_songs_dict[track_id] = {
+                "title": title,
+                "link": link
+            }
+        
+        return top_songs_dict
+    except:
+        return None
 
 #Function needed to use placeholder in HTML
 def get_base64_image(path):
@@ -47,30 +69,43 @@ def get_base64_image(path):
 
 #Popup appearing when clicking on the button containing infos about artist
 @st.dialog("Détails de l'artiste")
-def deezer_dialog(artist, link, artist_info):
-    st.markdown(f"""
-                # 🧑‍🎤 {artist}
-                💿 <b>Sorties</b> : {artist_info['nb_album']}<br>
-                🕺 <b>Fans</b> : {artist_info['nb_fan_formatted']}<br><br>""",
-                unsafe_allow_html = True)
-    st.markdown(
-        f"""
-        <a href="{link}" target="_blank"
-           style="
-               display:inline-block;
-               padding:8px 14px;
-               background:#A237FF;
-               color:white;
-               text-decoration:none;
-               border-radius:6px;
-               font-weight:600;
-           ">
-            Ouvrir sur Deezer
-        </a>
-        """,
-        unsafe_allow_html = True
-    )
+def show_artist_modal(artist, link, artist_info, top_songs):
 
+    left_col, right_col = st.columns([1, 1])
+    
+    with left_col:
+        st.markdown(f"""
+            # 🧑‍🎤 {artist}
+            💿 **Sorties** : {artist_info['nb_album']}  
+            🕺 **Fans** : {artist_info['nb_fan_formatted']}  
+        """, unsafe_allow_html = True)
+
+        st.markdown(
+            f"""
+            <a href="{link}" target="_blank"
+            style="
+                display:inline-block;
+                padding:10px 16px;
+                background:#A237FF;
+                color:white;
+                text-decoration:none;
+                border-radius:6px;
+                font-weight:600;
+            ">
+                Ouvrir sur Deezer
+            </a>
+            """,
+            unsafe_allow_html = True
+        )
+
+    with right_col:
+        st.markdown("## 🔥 Top titres")
+        
+        #Print the top 3 songs of the artist with a hypertext link
+        for top_song_id, top_song in top_songs.items():
+            st.write(f"🎵 [{top_song['title']}]({top_song['link']})")
+
+#--------------Code starts here--------------#
 def likedArtists(file_path):
     df = pd.read_excel(file_path, sheet_name = "4_favoriteArtist")
     st.title("🧑‍🎤 Artistes likés")
@@ -105,7 +140,7 @@ def likedArtists(file_path):
                 if not link.startswith("http"):
                     link = "https://" + link.lstrip("/")
                 #If artist not found, use a placeholder image and do not display the link
-                if artist_info == {'img_url': '', 'nb_album': 0, 'nb_fan_formatted': '0'}:
+                if artist_info is None:
                     st.markdown(
                         f"""<div style="display: flex; flex-direction: column; align-items: center; margin-top:6px;">
                                 <img src="{placeholder}" alt="{artist}" width="70" style="border-radius:8px; box-shadow:0 2px 8px #0001; display:block;"/>
@@ -114,6 +149,7 @@ def likedArtists(file_path):
                         unsafe_allow_html = True
                     )
                 else:
+                    url = artist_info["url"]
                     st.markdown(
                         f"""
                         <div style="display:flex; flex-direction:column; align-items:center;">
@@ -130,6 +166,7 @@ def likedArtists(file_path):
                         artist,
                         key = f"btn_{artist}_{i}_{j}",
                         use_container_width = True,
-                        type = "tertiary"
+                        type = "secondary"
                     ):
-                        deezer_dialog(artist, link, artist_info)
+                        top_songs = get_top_songs_from_tracklist(url)
+                        show_artist_modal(artist, link, artist_info, top_songs)
