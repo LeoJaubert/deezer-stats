@@ -44,19 +44,19 @@ def get_top_songs_from_tracklist(url):
         url = url + "/top?limit=3"
         response = requests.get(url)
         data = response.json()
-        
+
         top_songs_dict = {}
-        
+
         for track in data.get("data", []):
             track_id = track.get("id")
             title = track.get("title")
             link = track.get("link")
-            
+ 
             top_songs_dict[track_id] = {
                 "title": title,
                 "link": link
             }
-        
+
         return top_songs_dict
     except:
         return None
@@ -72,7 +72,7 @@ def get_base64_image(path):
 def show_artist_modal(artist, link, artist_info, top_songs):
 
     left_col, right_col = st.columns([1, 1])
-    
+
     with left_col:
         st.markdown(f"""
             # 🧑‍🎤 {artist}
@@ -100,7 +100,7 @@ def show_artist_modal(artist, link, artist_info, top_songs):
 
     with right_col:
         st.markdown("## 🔥 Top titres")
-        
+
         #Print the top 3 songs of the artist with a hypertext link
         for top_song_id, top_song in top_songs.items():
             st.write(f"🎵 [{top_song['title']}]({top_song['link']})")
@@ -116,7 +116,7 @@ def likedArtists(file_path):
         artist = df.iloc[i]["Artist"]
         link = df.iloc[i]["Link"]
         artistsDict[artist] = link
-   
+
     #Search bar
     search = st.text_input("🔎 Rechercher un artiste")
     if search:
@@ -160,7 +160,7 @@ def likedArtists(file_path):
                         """,
                         unsafe_allow_html = True
                     )
-  
+
                     #Button with artist name
                     if st.button(
                         artist,
