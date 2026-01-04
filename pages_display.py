@@ -5,21 +5,20 @@ import streamlit as st
 def afficher_page(file_path, page):
     #Params of different pages
     pages = {
-        "Détails du compte Deezer": {"sheet": "1_creationData", "title": "📊 Détails du compte Deezer", "color": "#ff6f00"},
-        "Profil de l'utilisateur": {"sheet": "2_customizationData", "title": "🧍 Profil de l'utilisateur", "color": "#0074D9"},
-        "Notifications": {"sheet": "3_setupData", "title": "🔔 Notifications", "color": "#2ECC40"},
-        "Options de paiement": {"sheet": "12_businessData", "title": "💸 Options de paiement", "color": "#B10DC9"},
-        "Misc": {"sheet": "13_navigationData", "title": "📂 Misc", "color": "#FF4136"},
+        "Détails du compte Deezer": {"sheet": "1_creationData", "title": "📊 Détails du compte Deezer"},
+        "Profil de l'utilisateur": {"sheet": "2_customizationData", "title": "🧍 Profil de l'utilisateur"},
+        "Notifications": {"sheet": "3_setupData", "title": "🔔 Notifications"},
+        "Options de paiement": {"sheet": "12_businessData", "title": "💸 Options de paiement"},
+        "Misc": {"sheet": "13_navigationData", "title": "📂 Misc"},
     }
 
     sheet = pages[page]["sheet"]
     title = pages[page]["title"]
-    color = pages[page]["color"]
 
     liste_colonne_dates = ["Registration Date", "Date of birth", "Paid offer start date", "Paid offer end date", "Current payment period start date", "Current payment period end date", "Try and buy start date", "Try and buy end date", "Last login date", "Last content synchronization", "Last stream on mobile", "Last stream on web", "Last stream on flow", "Registration date"]
 
     with st.spinner("Chargement..."):
-        df = pd.read_excel(file_path, sheet_name=sheet)
+        df = pd.read_excel(file_path, sheet_name = sheet)
         #Print title of the page
         st.title(title)
         st.markdown("---")
@@ -41,8 +40,8 @@ def afficher_page(file_path, page):
                 valeur = "❌"
             st.markdown(
                 f"""
-                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
-                    <span style="font-weight: 700; color: {color}; font-size: 1.1em;">{colonne}</span>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #bdc1be;">
+                    <span style="font-weight: 700; color: #A37BA2; font-size: 1.1em;">{colonne}</span>
                     <span style="color: #222; font-size: 1.05em;">{valeur}</span>
                 </div>
                 """,

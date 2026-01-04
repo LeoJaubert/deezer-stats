@@ -4,20 +4,6 @@ import pandas as pd
 import streamlit as st
 import requests
 
-#CSS styling
-st.markdown(
-    """
-    <style>
-    button[kind="tertiary"]:hover {
-        background-color: #FF0000 !important;
-        color: white !important;
-        border: 1px solid #FF0000 !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 def format_duration(seconds):
     minutes = seconds // 60
     hours = minutes // 60
@@ -185,7 +171,7 @@ def likedAlbums(file_path):
                         album,
                         key = f"btn_{album}_{i}_{j}",
                         use_container_width = True,
-                        type = "secondary"
+                        type = "primary"
                     ):
                         tracklist = get_tracklist_from_album(url)
                         show_album_modal(album, link, album_info, tracklist)

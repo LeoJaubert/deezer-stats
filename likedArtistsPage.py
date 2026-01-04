@@ -3,20 +3,6 @@ import pandas as pd
 import streamlit as st
 import requests
 
-#CSS styling
-st.markdown(
-    """
-    <style>
-    button[kind="tertiary"]:hover {
-        background-color: #FF0000 !important;
-        color: white !important;
-        border: 1px solid #FF0000 !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 #API call to obtain infos about artist
 @st.cache_data(show_spinner = False)
 def get_artist_info_from_id(artist_link):
@@ -166,7 +152,7 @@ def likedArtists(file_path):
                         artist,
                         key = f"btn_{artist}_{i}_{j}",
                         use_container_width = True,
-                        type = "secondary"
+                        type = "primary"
                     ):
                         top_songs = get_top_songs_from_tracklist(url)
                         show_artist_modal(artist, link, artist_info, top_songs)

@@ -4,10 +4,6 @@ from likedArtistsPage import likedArtists
 from likedAlbumsPage import likedAlbums
 from likedPlaylistsPage import likedPlaylists
 
-#CSS loading
-with open("config.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
 if __name__ == "__main__":
     st.sidebar.image("placeholder_pics/deezer-logo-coeur.jpg")
     st.sidebar.markdown(
@@ -23,19 +19,7 @@ if __name__ == "__main__":
         </h3>
     </div>
     """,
-    unsafe_allow_html=True)
-
-    #CSS styling
-    st.markdown(
-        """
-        <style>
-        [data-testid="stSidebar"] {
-            background: #A237FF;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    unsafe_allow_html = True)
 
     file_path = "stats-deezer.xlsx"
 
