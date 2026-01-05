@@ -24,6 +24,14 @@ def get_album_info_from_id(album_link):
         url = f"https://api.deezer.com/album/{album_id}"
         response = requests.get(url)
         data = response.json()
+        
+        main_artists = []
+
+        for contributor in data["contributors"]:
+            if contributor.get("role") == "Main":
+                main_artists.append(contributor.get("name"))
+
+        artists_str = ", ".join(main_artists)
 
         fans = int(data.get("fans", 0))
         duration = int(data.get("duration", 0))
@@ -35,6 +43,7 @@ def get_album_info_from_id(album_link):
             "fans_formatted": f"{fans:,}",
             "duration_formatted": format_duration(duration),
             "release_date_formatted": datetime.strptime(release_date, "%Y-%m-%d").strftime("%d/%m/%Y"),
+            "artists": artists_str,
             "url": url
         }
 
@@ -79,6 +88,7 @@ def show_album_modal(album, link, album_info, tracklist):
     with left_col:
         st.markdown(f"""
             # 💿 {album}
+            🧑‍🎤 **Artiste** : {album_info['artists']}\n
             🔢 **Morceaux** : {album_info['nb_tracks']}\n
             🕺 **Fans** : {album_info['fans_formatted']}\n
             ⏱  **Durée** : {album_info['duration_formatted']}\n
