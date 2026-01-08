@@ -3,6 +3,7 @@ from pages_display import afficher_page
 from likedArtistsPage import likedArtists
 from likedAlbumsPage import likedAlbums
 from likedPlaylistsPage import likedPlaylists
+from listeningHistoryPage import listeningHistory
 
 if __name__ == "__main__":
     st.sidebar.image("placeholder_pics/deezer-logo-coeur.jpg")
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     st.sidebar.title("Navigation")
     page = st.sidebar.selectbox(
         "Page à afficher",
-        ("Détails du compte Deezer", "Profil de l'utilisateur", "Notifications", "Options de paiement", "Misc", "Artistes likés", "Albums likés", "Playlists likées")
+        ("Détails du compte Deezer", "Profil de l'utilisateur", "Notifications", "Options de paiement", "Misc", "Artistes likés", "Albums likés", "Playlists likées", "Stats approfondies")
     )
 
     #Call to corresponding page function
@@ -37,5 +38,7 @@ if __name__ == "__main__":
         likedAlbums(file_path)
     elif page == "Playlists likées":
         likedPlaylists(file_path)
+    elif page == "Stats approfondies":
+        listeningHistory(file_path)
     else:
         afficher_page(file_path, page)

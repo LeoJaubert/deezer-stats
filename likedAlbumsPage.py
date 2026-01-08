@@ -133,7 +133,7 @@ def likedAlbums(file_path):
         albumsDict[album] = link
 
     # Barre de recherche
-    search = st.text_input("🔎 Rechercher un album")
+    search = st.text_input(f"🔎 Rechercher parmi les {len(df)} albums :")
     if search:
         albumsDict = {k: v for k, v in albumsDict.items() if search.lower() in k.lower()}
 

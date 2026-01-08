@@ -104,7 +104,7 @@ def likedArtists(file_path):
         artistsDict[artist] = link
 
     #Search bar
-    search = st.text_input("🔎 Rechercher un artiste")
+    search = st.text_input(f"🔎 Rechercher parmi les {len(df)} artistes :")
     if search:
         artistsDict = {k: v for k, v in artistsDict.items() if search.lower() in k.lower()}
 

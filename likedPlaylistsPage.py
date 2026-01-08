@@ -121,7 +121,7 @@ def likedPlaylists(file_path):
         playlistsDict[playlist] = link
 
     # Barre de recherche
-    search = st.text_input("🔎 Rechercher une playlist")
+    search = st.text_input(f"🔎 Rechercher parmi les {len(df)} playlists :")
     if search:
         playlistsDict = {k: v for k, v in playlistsDict.items() if search.lower() in k.lower()}
     #Sort in alphabetical order
