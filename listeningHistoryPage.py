@@ -5,13 +5,13 @@ import numpy as np
 def filterNonListenedSongs(df):
     #Clear all songs not listened more than 29 seconds to be counted
     df = df[df["Listening Time"] > 29]
-    
+
     #Clear every "hole" in the index
     df = df.reset_index(drop = True)
-    
+
     #Start index at 1 instead of 0
     df.index = df.index + 1
-    
+
     return df
 
 def calculateTopArtists(df):
@@ -29,7 +29,7 @@ def calculateTopArtists(df):
             Minutes_ecoutees = ("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
         )
         .sort_values(by = "Morceaux_ecoutes", ascending = False)
-        .head(100)
+        .head(50)
         .reset_index()
     )
 
@@ -43,7 +43,7 @@ def calculateTopArtists(df):
     )
     return top_artists
 
-def calculateTopSongs(df):
+def calculateTopTracks(df):
     top_tracks = (
         df.groupby(["Song Title", "Artist"])
         .agg(
@@ -51,14 +51,13 @@ def calculateTopSongs(df):
             Minutes_ecoutees=("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
         )
         .sort_values(by="Fois_ecoute", ascending=False)
-        .head(100)
+        .head(50)
         .reset_index()
     )
 
-    # Renommage des colonnes
     top_tracks = top_tracks.rename(
         columns={
-            "Track": "Son",
+            "Song Title": "Morceau",
             "Artist": "Artiste",
             "Fois_ecoute": "Nombre d'écoutes",
             "Minutes_ecoutees": "Minutes écoutées"
@@ -66,6 +65,45 @@ def calculateTopSongs(df):
     )
 
     return top_tracks
+
+def colorTopRows(row):
+    if row.name == 0:
+        return ["background-color: #FFD700"] * len(row)
+    elif row.name == 1:
+        return ["background-color: #C0C0C0"] * len(row)
+    elif row.name == 2:
+        return ["background-color: #CD7F32"] * len(row)
+    elif row.name >= 3 and row.name <= 9:
+        return ["background-color: #D9ADFF"] * len(row)
+    else:
+        return [""] * len(row)
+
+def printData(type_data, top, x_col, y_col_1, y_col_2):
+    if type_data == 'Tableau':
+        styled_top = (
+            top
+            .style
+            .apply(colorTopRows, axis = 1)
+        )
+        st.dataframe(styled_top, hide_index = True)
+    else:
+        chart_df = (
+            top
+            .head(50)
+            .melt(
+                id_vars = x_col,
+                value_vars = [y_col_1, y_col_2],
+                var_name = "Type",
+                value_name = "Valeur"
+            )
+        )
+        st.bar_chart(
+            chart_df,
+            x = x_col,
+            y = "Valeur",
+            color = "Type",
+            stack = False
+        )
 
 #--------------Code starts here--------------#
 def listeningHistory(file_path):
@@ -76,25 +114,33 @@ def listeningHistory(file_path):
     st.title("📊 Stats approfondies")
     st.markdown("---")
 
-    #Calculate and print top 100 of most streamed artists
-    st.subheader("Top 100 des artistes les plus écoutés")
-    top_artists = calculateTopArtists(df)
-    st.dataframe(top_artists, hide_index = True)
+    data_types = ['Tableau', 'Graphique']
+    type_data = st.radio('Type de données', data_types)
 
-    #Calculate and print top 100 of most streamed songs
-    st.subheader("Top 100 des morceaux les plus écoutés")
-    top_songs = calculateTopSongs(df)
-    styled_df = (
-        top_songs.style
-        .bar(subset=["Nombre d'écoutes"], color="#1DB954")
-        .background_gradient(subset=["Minutes écoutées"], cmap="Greens")
+    #Calculate and print top 50 of most streamed artists
+    st.subheader("Top 50 des artistes les plus écoutés")
+    top_artists = calculateTopArtists(df)
+
+    printData(
+        type_data = type_data,
+        top = top_artists,
+        x_col = "Artiste",
+        y_col_1 = "Morceaux écoutés",
+        y_col_2 = "Minutes écoutées"
     )
-    st.dataframe(top_songs, hide_index = True)
+
+    #Calculate and print top 50 of most streamed songs
+    st.subheader("Top 50 des morceaux les plus écoutés")
+    top_tracks = calculateTopTracks(df)
+
+    printData(
+        type_data = type_data,
+        top = top_tracks,
+        x_col = "Morceau",
+        y_col_1 = "Nombre d'écoutes",
+        y_col_2 = "Minutes écoutées"
+    )
 
     st.markdown("---")
     st.caption("_NB: Les morceaux écoutés pendant moins de 30 secondes ne sont pas comptabilisés, comme dans les statistiques officielles._")
     st.caption("_NB: Les morceaux en featuring, s'ils sont affichés comme tels dans les artistes, sont comptabilisés pour tous les artistes en featuring._")
-
-
-
-
