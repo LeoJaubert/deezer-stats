@@ -14,12 +14,18 @@ def filterNonListenedSongs(df):
 
     return df
 
-def calculateTopArtists(df):
+def calculateTopArtists(df, year_chosen):
     #Duplicate every song in featuring to count it for each artist of the song
     df_with_duplicated_featuring_songs = df.copy()
-    df_with_duplicated_featuring_songs["Artist"] =    df_with_duplicated_featuring_songs["Artist"].str.split(",")
-    df_with_duplicated_featuring_songs =  df_with_duplicated_featuring_songs.explode("Artist")
-    df_with_duplicated_featuring_songs["Artist"] =    df_with_duplicated_featuring_songs["Artist"].str.strip()
+    df_with_duplicated_featuring_songs["Artist"] = df_with_duplicated_featuring_songs["Artist"].str.split(",")
+    df_with_duplicated_featuring_songs = df_with_duplicated_featuring_songs.explode("Artist")
+    df_with_duplicated_featuring_songs["Artist"] = df_with_duplicated_featuring_songs["Artist"].str.strip()
+
+    #Filter according to the year chosen
+    if year_chosen == "All time":
+        pass
+    else:
+        df_with_duplicated_featuring_songs = df_with_duplicated_featuring_songs[df_with_duplicated_featuring_songs["Date"].dt.year == year_chosen]
 
     #Create table with artists, songs listened and minutes listened (rounded to superior)
     top_artists = (
@@ -43,7 +49,13 @@ def calculateTopArtists(df):
     )
     return top_artists
 
-def calculateTopTracks(df):
+def calculateTopTracks(df, year_chosen):
+    #Filter according to the year chosen
+    if year_chosen == "All time":
+        pass
+    else:
+        df = df[df["Date"].dt.year == year_chosen]
+
     top_tracks = (
         df.groupby(["Song Title", "Artist"])
         .agg(
@@ -105,6 +117,25 @@ def printData(type_data, top, x_col, y_col_1, y_col_2):
             stack = False
         )
 
+def calculateListeningTime(df, year_chosen):
+    #Filter according to the year chosen
+    if year_chosen == "All time":
+        pass
+    else:
+        df = df[df["Date"].dt.year == year_chosen]
+
+    totalsec = df['Listening Time'].sum()
+    totalhour = round(totalsec / 3600)
+    totaldays = totalhour // 24
+    modulototaldays = totalhour % 24
+    return totalhour, totaldays, modulototaldays
+
+def findEveryYearInDateColumn(df):
+    df["Date"] = pd.to_datetime(df["Date"])
+    years = sorted(df["Date"].dt.year.unique().tolist())
+    years.insert(0, 'All time')
+    return years
+
 #--------------Code starts here--------------#
 def listeningHistory(file_path):
     df = pd.read_excel(file_path, sheet_name="10_listeningHistory")
@@ -114,12 +145,15 @@ def listeningHistory(file_path):
     st.title("📊 Stats approfondies")
     st.markdown("---")
 
+    years = findEveryYearInDateColumn(df)
+    year_chosen = st.selectbox("Choix de l'année", years)
+
     data_types = ['Tableau', 'Graphique']
     type_data = st.radio('Type de données', data_types)
 
     #Calculate and print top 50 of most streamed artists
     st.subheader("Top 50 des artistes les plus écoutés")
-    top_artists = calculateTopArtists(df)
+    top_artists = calculateTopArtists(df, year_chosen)
 
     printData(
         type_data = type_data,
@@ -131,7 +165,7 @@ def listeningHistory(file_path):
 
     #Calculate and print top 50 of most streamed songs
     st.subheader("Top 50 des morceaux les plus écoutés")
-    top_tracks = calculateTopTracks(df)
+    top_tracks = calculateTopTracks(df, year_chosen)
 
     printData(
         type_data = type_data,
@@ -140,6 +174,11 @@ def listeningHistory(file_path):
         y_col_1 = "Nombre d'écoutes",
         y_col_2 = "Minutes écoutées"
     )
+
+    #Calculate and print listening time
+    st.subheader("Nombre d'heures écoutées")
+    totalhour, totaldays, modulototaldays = calculateListeningTime(df, year_chosen)
+    st.text(f"Temps d'écoute: {totalhour} heures, soit {totaldays} jours et {modulototaldays} heures.")
 
     st.markdown("---")
     st.caption("_NB: Les morceaux écoutés pendant moins de 30 secondes ne sont pas comptabilisés, comme dans les statistiques officielles._")
