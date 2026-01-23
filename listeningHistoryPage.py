@@ -3,7 +3,7 @@ import streamlit as st
 import numpy as np
 import altair as alt
 
-def filterNonListenedSongs(df):
+def formatProperlyDataframe(df):
     #Clear all songs not listened more than 29 seconds to be counted
     df = df[df["Listening Time"] > 29]
 
@@ -12,6 +12,9 @@ def filterNonListenedSongs(df):
 
     #Start index at 1 instead of 0
     df.index = df.index + 1
+
+    #Convert "Date" column from string to datetime
+    df["Date"] = pd.to_datetime(df["Date"], errors = "coerce")
 
     return df
 
@@ -187,19 +190,13 @@ def showListeningTimeByMonth(df, year_chosen):
 def showListeningTimeByYear(df):
     df = df.copy()
 
-    # Conversion en datetime
-    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-
-    # Créer la colonne Année
     df["Année"] = df["Date"].dt.year
 
-    # Ensuite tu peux grouper
     yearly_stats = df.groupby("Année").agg(
         Morceaux_ecoutes=("Date", "count"),
         Minutes_ecoutees=("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
     ).reset_index()
 
-    # Renommage propre
     yearly_stats = yearly_stats.rename(
         columns={
             "Morceaux_ecoutes": "Morceaux écoutés",
@@ -207,7 +204,6 @@ def showListeningTimeByYear(df):
         }
     )
 
-    # Création du graphique
     chart = (
         alt.Chart(yearly_stats)
         .transform_fold(
@@ -217,7 +213,7 @@ def showListeningTimeByYear(df):
         .mark_line(point=True)
         .encode(
             x=alt.X(
-                "Année:O",              # Ordinal = ordre conservé
+                "Année:O",
                 title="Année"
             ),
             y=alt.Y(
@@ -229,7 +225,7 @@ def showListeningTimeByYear(df):
                 title="Type"
             ),
             tooltip=[
-                alt.Tooltip("Annee:O", title="Année"),
+                alt.Tooltip("Année:O", title="Année"),
                 alt.Tooltip("Type:N", title="Type"),
                 alt.Tooltip("Valeur:Q", title="Valeur")
             ]
@@ -238,33 +234,85 @@ def showListeningTimeByYear(df):
 
     st.altair_chart(chart)
 
+def showListeningTimeByHour(df, year_chosen):
+    df = df.copy()
+    df = df.dropna(subset=["Date"])
+
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    df["Heure"] = df["Date"].dt.hour
+
+    hourly_stats = (
+        df.groupby("Heure")
+        .agg(
+            Morceaux_ecoutes=("Date", "count"),
+            Minutes_ecoutees=("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
+        )
+        .reindex(range(24), fill_value=0)
+        .reset_index()
+    )
+
+    chart_df = hourly_stats.melt(
+        id_vars=["Heure"],
+        value_vars=["Morceaux_ecoutes", "Minutes_ecoutees"],
+        var_name="Type",
+        value_name="Valeur"
+    )
+
+    chart_df["Type"] = chart_df["Type"].replace({
+        "Morceaux_ecoutes": "Morceaux écoutés",
+        "Minutes_ecoutees": "Minutes écoutées"
+    })
+
+    chart = (
+        alt.Chart(chart_df)
+        .mark_line(point=True)
+        .encode(
+            x=alt.X(
+                "Heure:O",
+                title="Heure de la journée",
+                axis=alt.Axis(
+                    labelExpr='datum.value + "h - " + (datum.value+1) + "h"'
+                )
+            ),
+            y=alt.Y("Valeur:Q", title="Valeur"),
+            color=alt.Color("Type:N", title="Type"),
+            tooltip=["Heure", "Type", "Valeur"]
+        )
+    )
+
+    st.altair_chart(chart)
+
 #--------------Code starts here--------------#
 def listeningHistory(file_path):
     df = pd.read_excel(file_path, sheet_name="10_listeningHistory")
-
-    df = filterNonListenedSongs(df)
+    df = formatProperlyDataframe(df)
 
     st.title("📊 Stats approfondies")
     st.markdown("---")
 
+    #Calculate and display evolution of listening time by year
     st.subheader("📈 Évolution annuelle de l’écoute")
-
     showListeningTimeByYear(df)
 
     years = findEveryYearInDateColumn(df)
     year_chosen = st.selectbox("Choix de l'année", years)
 
-    st.subheader("📈 Évolution mensuelle de l’écoute")
+    #Calculate and display evolution of listening time by hour
+    st.subheader("🕑 Tendance d'écoute par heure")
+    showListeningTimeByHour(df, year_chosen)
 
+    #Calculate and display evolution of listening time by month
+    st.subheader("📈 Évolution mensuelle de l’écoute")
     showListeningTimeByMonth(df, year_chosen)
 
     data_types = ['Tableau', 'Graphique']
     type_data = st.radio('Type de données', data_types)
 
-    #Calculate and print top 50 of most streamed artists
+    #Calculate and display top 50 of most streamed artists
     st.subheader("🧑‍🎤 Top 50 des artistes les plus écoutés")
     top_artists = calculateTopArtists(df, year_chosen)
-
     printData(
         type_data = type_data,
         top = top_artists,
@@ -273,10 +321,9 @@ def listeningHistory(file_path):
         y_col_2 = "Minutes écoutées"
     )
 
-    #Calculate and print top 50 of most streamed songs
+    #Calculate and display top 50 of most streamed songs
     st.subheader("🎵 Top 50 des morceaux les plus écoutés")
     top_tracks = calculateTopTracks(df, year_chosen)
-
     printData(
         type_data = type_data,
         top = top_tracks,
