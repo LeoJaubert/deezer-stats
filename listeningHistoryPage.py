@@ -13,8 +13,9 @@ def formatProperlyDataframe(df):
     #Start index at 1 instead of 0
     df.index = df.index + 1
 
-    #Convert "Date" column from string to datetime
-    df["Date"] = pd.to_datetime(df["Date"], errors = "coerce")
+    #Convert "Date" column from string to datetime and sets the correct timezone (UTC +1)
+    df["Date"] = pd.to_datetime(df["Date"], errors = "coerce", utc = True)
+    df["Date"] = df["Date"].dt.tz_convert("Europe/Paris")
 
     return df
 
@@ -265,6 +266,8 @@ def showListeningTimeByHour(df, year_chosen):
         "Minutes_ecoutees": "Minutes écoutées"
     })
 
+    chart_df["Heure_label"] = chart_df["Heure"].apply(lambda x: f"{x}h - {x+1}h")
+
     chart = (
         alt.Chart(chart_df)
         .mark_line(point=True)
@@ -278,9 +281,43 @@ def showListeningTimeByHour(df, year_chosen):
             ),
             y=alt.Y("Valeur:Q", title="Valeur"),
             color=alt.Color("Type:N", title="Type"),
-            tooltip=["Heure", "Type", "Valeur"]
+            tooltip=[
+                alt.Tooltip("Heure_label:O", title="Heure de la journée"),
+                alt.Tooltip("Type:N", title="Type"),
+                alt.Tooltip("Valeur:Q", title="Valeur"),
+            ]
         )
     )
+
+    st.altair_chart(chart)
+
+def showListeningTimeByDayOfTheWeek(df, year_chosen):
+    df = df.copy()
+
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    df["Jour"] = df["Date"].dt.dayofweek
+    jours_labels = {0: "Lundi", 1: "Mardi", 2: "Mercredi", 3: "Jeudi", 4: "Vendredi", 5: "Samedi", 6: "Dimanche"}
+
+    df_day = (
+        df.groupby("Jour")
+        .agg(Minutes_ecoutees=("Listening Time", lambda x: int(np.ceil(x.sum() / 60))))
+        .reset_index()
+    )
+
+    df_day["Jour_label"] = df_day["Jour"].map(jours_labels)
+    
+    ordre_jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+    
+    base = alt.Chart(df_day).encode(
+        theta=alt.Theta("Minutes_ecoutees:Q", stack=True),
+        color=alt.Color("Jour_label:N", sort=ordre_jours, title="Jour de la semaine"),
+        order=alt.Order("Jour:Q"),
+        tooltip=[alt.Tooltip("Jour_label:N", title="Jour"), alt.Tooltip("Minutes_ecoutees:Q", title="Minutes")]
+    )
+
+    chart = base.mark_arc(outerRadius = 150)
 
     st.altair_chart(chart)
 
@@ -298,6 +335,10 @@ def listeningHistory(file_path):
 
     years = findEveryYearInDateColumn(df)
     year_chosen = st.selectbox("Choix de l'année", years)
+
+    #Calculate and display repartition of listening time by day of the week
+    st.subheader("📅 Répartition d'écoute par jour de la semaine")
+    showListeningTimeByDayOfTheWeek(df, year_chosen)
 
     #Calculate and display evolution of listening time by hour
     st.subheader("🕑 Tendance d'écoute par heure")
