@@ -3,6 +3,10 @@ import streamlit as st
 import numpy as np
 import altair as alt
 
+@st.cache_data
+def loadFile(path):
+    return pd.read_excel(path, sheet_name="10_listeningHistory")
+
 def formatProperlyDataframe(df):
     #Clear all songs not listened more than 29 seconds to be counted
     df = df[df["Listening Time"] > 29]
@@ -307,9 +311,9 @@ def showListeningTimeByDayOfTheWeek(df, year_chosen):
     )
 
     df_day["Jour_label"] = df_day["Jour"].map(jours_labels)
-    
+
     ordre_jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
-    
+
     base = alt.Chart(df_day).encode(
         theta=alt.Theta("Minutes_ecoutees:Q", stack=True),
         color=alt.Color("Jour_label:N", sort=ordre_jours, title="Jour de la semaine"),
@@ -321,9 +325,52 @@ def showListeningTimeByDayOfTheWeek(df, year_chosen):
 
     st.altair_chart(chart)
 
+def showListeningTimeByNight(df, year_chosen):
+    df = df.copy()
+
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    df["Heure"] = df["Date"].dt.hour
+
+    #Define night time as 22h - 6h
+    night_mask = (df["Heure"] >= 22) | (df["Heure"] < 6)
+
+    total_listens = len(df)
+    night_listens = night_mask.sum()
+
+    night_percentage = round((night_listens / total_listens) * 100, 1)
+
+    return night_percentage
+
+def findMostListenedDay(df, year_chosen):
+    df = df.copy()
+
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    df["Jour"] = df["Date"].dt.date
+
+    daily_stats = (
+        df.groupby("Jour")
+        .agg(
+            tracksvalue=("Date", "count"),
+            minutesvalue=("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
+        )
+        .sort_values("minutesvalue", ascending=False)
+    )
+
+    top_day = daily_stats.iloc[0]
+    day_date = daily_stats.index[0]
+
+    #Correctly format date
+    mostlistenedday = day_date.strftime("%d/%m/%Y")
+
+    return mostlistenedday, top_day["tracksvalue"], top_day["minutesvalue"]
+
 #--------------Code starts here--------------#
 def listeningHistory(file_path):
-    df = pd.read_excel(file_path, sheet_name="10_listeningHistory")
+    df = loadFile(file_path)
     df = formatProperlyDataframe(df)
 
     st.title("📊 Stats approfondies")
@@ -373,10 +420,20 @@ def listeningHistory(file_path):
         y_col_2 = "Minutes écoutées"
     )
 
+    #Calculate and display listening time by night
+    st.subheader("🌙 Temps d'écoute jour/nuit")
+    night_percentage = showListeningTimeByNight(df, year_chosen)
+    st.text(f"Pourcentage d'écoute la nuit: {night_percentage} %   (22h - 6h)")
+
     #Calculate and print listening time
-    st.subheader("Nombre d'heures écoutées")
+    st.subheader("🔢 Nombre d'heures écoutées")
     totalhour, totaldays, modulototaldays = calculateListeningTime(df, year_chosen)
     st.text(f"Temps d'écoute: {totalhour} heures, soit {totaldays} jours et {modulototaldays} heures.")
+
+    #Calculate and print day with most listening time
+    st.subheader("🔝 Jour avec le plus de minutes écoutées")
+    mostlistenedday, tracksvalue, minutesvalue = findMostListenedDay(df, year_chosen)
+    st.text(f"Jour: {mostlistenedday}, avec {tracksvalue} morceaux écoutés et {minutesvalue} minutes écoutées")
 
     st.markdown("---")
     st.caption("_NB: Les morceaux écoutés pendant moins de 30 secondes ne sont pas comptabilisés, comme dans les statistiques officielles._")
