@@ -1,6 +1,5 @@
 import base64
 from datetime import datetime
-import pandas as pd
 import streamlit as st
 import requests
 
@@ -121,8 +120,8 @@ def show_album_modal(album, link, album_info, tracklist):
             st.write(f"🎵 [{track['title']}]({track['link']})")
 
 #--------------Code starts here--------------#
-def likedAlbums(file_path):
-    df = pd.read_excel(file_path, sheet_name="5_favoriteAlbum")
+def likedAlbums(sheet):
+    df = sheet
     st.title("💿 Albums likés")
     st.markdown("---")
 

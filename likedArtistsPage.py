@@ -1,5 +1,4 @@
 import base64
-import pandas as pd
 import streamlit as st
 import requests
 
@@ -92,8 +91,8 @@ def show_artist_modal(artist, link, artist_info, top_songs):
             st.write(f"🎵 [{top_song['title']}]({top_song['link']})")
 
 #--------------Code starts here--------------#
-def likedArtists(file_path):
-    df = pd.read_excel(file_path, sheet_name = "4_favoriteArtist")
+def likedArtists(sheet):
+    df = sheet
     st.title("🧑‍🎤 Artistes likés")
     st.markdown("---")
 

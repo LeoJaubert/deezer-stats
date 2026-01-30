@@ -3,10 +3,6 @@ import streamlit as st
 import numpy as np
 import altair as alt
 
-@st.cache_data
-def loadFile(path):
-    return pd.read_excel(path, sheet_name="10_listeningHistory")
-
 def formatProperlyDataframe(df):
     #Clear all songs not listened more than 29 seconds to be counted
     df = df[df["Listening Time"] > 29]
@@ -368,16 +364,34 @@ def findMostListenedDay(df, year_chosen):
 
     return mostlistenedday, top_day["tracksvalue"], top_day["minutesvalue"]
 
+def findFirstAndLastTrack(df, year_chosen):
+    df = df.copy()
+
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    first_row = df.loc[df["Date"].idxmin()]
+    first_track_title = first_row["Song Title"]
+    first_track_artist = first_row["Artist"]
+    first_track_date = first_row["Date"].strftime("%d/%m/%Y à %H:%M")
+
+    last_row = df.loc[df["Date"].idxmax()]
+    last_track_title = last_row["Song Title"]
+    last_track_artist = last_row["Artist"]
+    last_track_date = last_row["Date"].strftime("%d/%m/%Y à %H:%M")
+
+    return first_track_title, first_track_artist, first_track_date, last_track_title, last_track_artist, last_track_date
+
 #--------------Code starts here--------------#
-def listeningHistory(file_path):
-    df = loadFile(file_path)
+def listeningHistory(sheet):
+    df = sheet
     df = formatProperlyDataframe(df)
 
     st.title("📊 Stats approfondies")
     st.markdown("---")
 
     #Calculate and display evolution of listening time by year
-    st.subheader("📈 Évolution annuelle de l’écoute")
+    st.subheader("📶 Évolution annuelle de l’écoute")
     showListeningTimeByYear(df)
 
     years = findEveryYearInDateColumn(df)
@@ -423,17 +437,22 @@ def listeningHistory(file_path):
     #Calculate and display listening time by night
     st.subheader("🌙 Temps d'écoute jour/nuit")
     night_percentage = showListeningTimeByNight(df, year_chosen)
-    st.text(f"Pourcentage d'écoute la nuit: {night_percentage} %   (22h - 6h)")
+    st.text(f"Jour: {100 - night_percentage} % (6h - 22h)\nNuit: {night_percentage} %   (22h - 6h)")
 
     #Calculate and print listening time
     st.subheader("🔢 Nombre d'heures écoutées")
     totalhour, totaldays, modulototaldays = calculateListeningTime(df, year_chosen)
-    st.text(f"Temps d'écoute: {totalhour} heures, soit {totaldays} jours et {modulototaldays} heures.")
+    st.text(f"Temps d'écoute: {totalhour} heures, soit {totaldays} jours et {modulototaldays} heures")
 
     #Calculate and print day with most listening time
     st.subheader("🔝 Jour avec le plus de minutes écoutées")
     mostlistenedday, tracksvalue, minutesvalue = findMostListenedDay(df, year_chosen)
     st.text(f"Jour: {mostlistenedday}, avec {tracksvalue} morceaux écoutés et {minutesvalue} minutes écoutées")
+
+    #Calculate and print first and last track listened
+    st.subheader("ℹ️ Premier et dernier morceau écouté")
+    first_track_title, first_track_artist, first_track_date, last_track_title, last_track_artist, last_track_date = findFirstAndLastTrack(df, year_chosen)
+    st.text(f"Premier morceau: {first_track_title} de {first_track_artist} le {first_track_date}\nDernier morceau: {last_track_title} de {last_track_artist} le {last_track_date}")
 
     st.markdown("---")
     st.caption("_NB: Les morceaux écoutés pendant moins de 30 secondes ne sont pas comptabilisés, comme dans les statistiques officielles._")

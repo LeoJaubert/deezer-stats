@@ -2,7 +2,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-def afficher_page(file_path, page):
+def showPage(file_path, page):
     #Params of different pages
     pages = {
         "Détails du compte Deezer": {"sheet": "1_creationData", "title": "📊 Détails du compte Deezer"},
@@ -31,19 +31,21 @@ def afficher_page(file_path, page):
                 valeur = "N/A"
             #Format date values in 'dd/mm/yyyy' format
             if colonne in liste_colonne_dates:
-                date_obj = datetime.strptime(valeur, "%Y-%m-%d")
-                valeur = date_obj.strftime("%d/%m/%Y")
+                try:
+                    date_obj = datetime.strptime(valeur, "%Y-%m-%d")
+                    valeur = date_obj.strftime("%d/%m/%Y")
+                except:
+                    date_obj = valeur = "❓"
             #Format boolean values with emojis
             if str(valeur) == "True":
                 valeur = "✅"
             if str(valeur) == "False":
                 valeur = "❌"
             st.markdown(
-                f"""
-                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #bdc1be;">
-                    <span style="font-weight: 700; color: #A37BA2; font-size: 1.1em;">{colonne}</span>
-                    <span style="color: #222; font-size: 1.05em;">{valeur}</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            f"""
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #bdc1be;">
+                <span style="font-weight: 700; color: #A37BA2; font-size: 1.1em;">{colonne}</span>
+                <span style="color: #222; font-size: 1.05em;">{valeur}</span>
+            </div>
+            """,
+            unsafe_allow_html = True)
