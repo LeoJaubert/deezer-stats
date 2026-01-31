@@ -4,7 +4,7 @@ import numpy as np
 import altair as alt
 
 def formatProperlyDataframe(df):
-    #Clear all songs not listened more than 29 seconds to be counted
+    #Clear all songs listened less than 30 seconds to be counted
     df = df[df["Listening Time"] > 29]
 
     #Clear every "hole" in the index
@@ -18,175 +18,6 @@ def formatProperlyDataframe(df):
     df["Date"] = df["Date"].dt.tz_convert("Europe/Paris")
 
     return df
-
-def calculateTopArtists(df, year_chosen):
-    #Duplicate every song in featuring to count it for each artist of the song
-    df_with_duplicated_featuring_songs = df.copy()
-    df_with_duplicated_featuring_songs["Artist"] = df_with_duplicated_featuring_songs["Artist"].str.split(",")
-    df_with_duplicated_featuring_songs = df_with_duplicated_featuring_songs.explode("Artist")
-    df_with_duplicated_featuring_songs["Artist"] = df_with_duplicated_featuring_songs["Artist"].str.strip()
-
-    #Filter according to the year chosen
-    if year_chosen == "All time":
-        pass
-    else:
-        df_with_duplicated_featuring_songs = df_with_duplicated_featuring_songs[df_with_duplicated_featuring_songs["Date"].dt.year == year_chosen]
-
-    #Create table with artists, songs listened and minutes listened (rounded to superior)
-    top_artists = (
-        df_with_duplicated_featuring_songs.groupby("Artist")
-        .agg(
-            Morceaux_ecoutes = ("Artist", "count"),
-            Minutes_ecoutees = ("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
-        )
-        .sort_values(by = "Morceaux_ecoutes", ascending = False)
-        .head(50)
-        .reset_index()
-    )
-
-    #Rename columns
-    top_artists = top_artists.rename(
-        columns = {
-            "Artist": "Artiste",
-            "Morceaux_ecoutes": "Morceaux écoutés",
-            "Minutes_ecoutees": "Minutes écoutées"
-        }
-    )
-    return top_artists
-
-def calculateTopTracks(df, year_chosen):
-    #Filter according to the year chosen
-    if year_chosen == "All time":
-        pass
-    else:
-        df = df[df["Date"].dt.year == year_chosen]
-
-    top_tracks = (
-        df.groupby(["Song Title", "Artist"])
-        .agg(
-            Fois_ecoute=("Song Title", "count"),
-            Minutes_ecoutees=("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
-        )
-        .sort_values(by="Fois_ecoute", ascending=False)
-        .head(50)
-        .reset_index()
-    )
-
-    top_tracks = top_tracks.rename(
-        columns={
-            "Song Title": "Morceau",
-            "Artist": "Artiste",
-            "Fois_ecoute": "Nombre d'écoutes",
-            "Minutes_ecoutees": "Minutes écoutées"
-        }
-    )
-
-    return top_tracks
-
-def colorTopRows(row):
-    if row.name == 0:
-        return ["background-color: #FFD700"] * len(row)
-    elif row.name == 1:
-        return ["background-color: #C0C0C0"] * len(row)
-    elif row.name == 2:
-        return ["background-color: #CD7F32"] * len(row)
-    elif row.name >= 3 and row.name <= 9:
-        return ["background-color: #D9ADFF"] * len(row)
-    else:
-        return [""] * len(row)
-
-def printData(type_data, top, x_col, y_col_1, y_col_2):
-    if type_data == 'Tableau':
-        styled_top = (
-            top
-            .style
-            .apply(colorTopRows, axis = 1)
-        )
-        st.dataframe(styled_top, hide_index = True)
-    else:
-        chart_df = (
-            top
-            .head(50)
-            .melt(
-                id_vars = x_col,
-                value_vars = [y_col_1, y_col_2],
-                var_name = "Type",
-                value_name = "Valeur"
-            )
-        )
-        st.bar_chart(
-            chart_df,
-            x = x_col,
-            y = "Valeur",
-            color = "Type",
-            stack = False
-        )
-
-def calculateListeningTime(df, year_chosen):
-    #Filter according to the year chosen
-    if year_chosen == "All time":
-        pass
-    else:
-        df = df[df["Date"].dt.year == year_chosen]
-
-    totalsec = df['Listening Time'].sum()
-    totalhour = round(totalsec / 3600)
-    totaldays = totalhour // 24
-    modulototaldays = totalhour % 24
-    return totalhour, totaldays, modulototaldays
-
-def findEveryYearInDateColumn(df):
-    df["Date"] = pd.to_datetime(df["Date"])
-    years = sorted(df["Date"].dt.year.unique().tolist())
-    years.insert(0, 'All time')
-    return years
-
-def showListeningTimeByMonth(df, year_chosen):
-    if year_chosen != "All time":
-        df = df[df["Date"].dt.year == year_chosen]
-
-    df = df.copy()
-    df["Mois_num"] = df["Date"].dt.month
-    df["Mois"] = df["Date"].dt.month_name(locale="fr_FR")
-
-    monthly_stats = (
-        df.groupby(["Mois_num", "Mois"])
-        .agg(
-            **{
-                "Morceaux écoutés": ("Date", "count"),
-                "Minutes écoutées": ("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
-            }
-        )
-        .reset_index()
-    )
-
-    chart = (
-        alt.Chart(monthly_stats)
-        .transform_fold(
-            ["Morceaux écoutés", "Minutes écoutées"],
-            as_=["Type", "Valeur"]
-        )
-        .mark_line(point=True)
-        .encode(
-            x=alt.X(
-                "Mois:N",
-                sort=alt.SortField(
-                    field="Mois_num",
-                    order="ascending"
-                ),
-                title="Mois"
-            ),
-            y=alt.Y("Valeur:Q", title="Valeur"),
-            color=alt.Color("Type:N", title="Type"),
-            tooltip=[
-                alt.Tooltip("Mois:N", title="Mois"),
-                alt.Tooltip("Type:N", title="Type"),
-                alt.Tooltip("Valeur:Q", title="Valeur")
-            ]
-        )
-    )
-
-    st.altair_chart(chart)
 
 def showListeningTimeByYear(df):
     df = df.copy()
@@ -227,6 +58,216 @@ def showListeningTimeByYear(df):
             ),
             tooltip=[
                 alt.Tooltip("Année:O", title="Année"),
+                alt.Tooltip("Type:N", title="Type"),
+                alt.Tooltip("Valeur:Q", title="Valeur")
+            ]
+        )
+    )
+
+    st.altair_chart(chart)
+
+def findEveryYearInDateColumn(df):
+    df["Date"] = pd.to_datetime(df["Date"])
+    years = sorted(df["Date"].dt.year.unique().tolist())
+    years.insert(0, 'All time')
+
+    return years
+
+def calculateTopArtists(df, year_chosen):
+    #Duplicate every song in featuring to count it for each artist of the song
+    df_with_duplicated_featuring_songs = df.copy()
+    df_with_duplicated_featuring_songs["Artist"] = df_with_duplicated_featuring_songs["Artist"].str.split(",")
+    df_with_duplicated_featuring_songs = df_with_duplicated_featuring_songs.explode("Artist")
+    df_with_duplicated_featuring_songs["Artist"] = df_with_duplicated_featuring_songs["Artist"].str.strip()
+
+    #Filter according to the year chosen
+    if year_chosen != "All time":
+        df_with_duplicated_featuring_songs = df_with_duplicated_featuring_songs[df_with_duplicated_featuring_songs["Date"].dt.year == year_chosen]
+
+    #Create table with artists, songs listened and minutes listened (rounded to superior)
+    top_artists = (
+        df_with_duplicated_featuring_songs.groupby("Artist")
+        .agg(
+            Morceaux_ecoutes = ("Artist", "count"),
+            Minutes_ecoutees = ("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
+        )
+        .sort_values(by = "Morceaux_ecoutes", ascending = False)
+        .head(50)
+        .reset_index()
+    )
+
+    #Rename columns
+    top_artists = top_artists.rename(
+        columns = {
+            "Artist": "Artiste",
+            "Morceaux_ecoutes": "Morceaux écoutés",
+            "Minutes_ecoutees": "Minutes écoutées"
+        }
+    )
+
+    return top_artists
+
+def calculateTopTracks(df, year_chosen):
+    #Filter according to the year chosen
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    top_tracks = (
+        df.groupby(["Song Title", "Artist"])
+        .agg(
+            Fois_ecoute=("Song Title", "count"),
+            Minutes_ecoutees=("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
+        )
+        .sort_values(by="Fois_ecoute", ascending=False)
+        .head(50)
+        .reset_index()
+    )
+
+    top_tracks = top_tracks.rename(
+        columns={
+            "Song Title": "Morceau",
+            "Artist": "Artiste",
+            "Fois_ecoute": "Nombre d'écoutes",
+            "Minutes_ecoutees": "Minutes écoutées"
+        }
+    )
+
+    return top_tracks
+
+def calculateTopAlbums(df, year_chosen):
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    top_albums = (
+        df.groupby(["Album Title", "Artist"])
+        .agg(
+            Fois_ecoute=("Album Title", "count"),
+            Minutes_ecoutees=("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
+        )
+        .sort_values(by="Fois_ecoute", ascending=False)
+        .head(50)
+        .reset_index()
+    )
+
+    top_albums = top_albums.rename(
+        columns={
+            "Album Title": "Album",
+            "Artist": "Artiste",
+            "Fois_ecoute": "Nombre d'écoutes",
+            "Minutes_ecoutees": "Minutes écoutées"
+        }
+    )
+
+    return top_albums
+
+def colorTopRows(row):
+    if row.name == 0:
+        return ["background-color: #FFD700"] * len(row)
+    elif row.name == 1:
+        return ["background-color: #C0C0C0"] * len(row)
+    elif row.name == 2:
+        return ["background-color: #CD7F32"] * len(row)
+    elif row.name >= 3 and row.name <= 9:
+        return ["background-color: #D9ADFF"] * len(row)
+    else:
+        return [""] * len(row)
+
+def printData(type_data, top, x_col, y_col_1, y_col_2):
+    if type_data == 'Tableau':
+        styled_top = (
+            top
+            .style
+            .apply(colorTopRows, axis = 1)
+        )
+        st.dataframe(styled_top, hide_index = True)
+    else:
+        chart_df = (
+            top
+            .head(50)
+            .melt(
+                id_vars = x_col,
+                value_vars = [y_col_1, y_col_2],
+                var_name = "Type",
+                value_name = "Valeur"
+            )
+        )
+        st.bar_chart(
+            chart_df,
+            x = x_col,
+            y = "Valeur",
+            color = "Type",
+            stack = False
+        )
+
+def showListeningTimeByDayOfTheWeek(df, year_chosen):
+    df = df.copy()
+
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    df["Jour"] = df["Date"].dt.dayofweek
+    jours_labels = {0: "Lundi", 1: "Mardi", 2: "Mercredi", 3: "Jeudi", 4: "Vendredi", 5: "Samedi", 6: "Dimanche"}
+
+    df_day = (
+        df.groupby("Jour")
+        .agg(Minutes_ecoutees=("Listening Time", lambda x: int(np.ceil(x.sum() / 60))))
+        .reset_index()
+    )
+
+    df_day["Jour_label"] = df_day["Jour"].map(jours_labels)
+
+    ordre_jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+
+    base = alt.Chart(df_day).encode(
+        theta=alt.Theta("Minutes_ecoutees:Q", stack=True),
+        color=alt.Color("Jour_label:N", sort=ordre_jours, title="Jour de la semaine"),
+        order=alt.Order("Jour:Q"),
+        tooltip=[alt.Tooltip("Jour_label:N", title="Jour"), alt.Tooltip("Minutes_ecoutees:Q", title="Minutes")]
+    )
+
+    chart = base.mark_arc(outerRadius = 150)
+
+    st.altair_chart(chart)
+
+def showListeningTimeByMonth(df, year_chosen):
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    df = df.copy()
+    df["Mois_num"] = df["Date"].dt.month
+    df["Mois"] = df["Date"].dt.month_name(locale="fr_FR")
+
+    monthly_stats = (
+        df.groupby(["Mois_num", "Mois"])
+        .agg(
+            **{
+                "Morceaux écoutés": ("Date", "count"),
+                "Minutes écoutées": ("Listening Time", lambda x: int(np.ceil(x.sum() / 60)))
+            }
+        )
+        .reset_index()
+    )
+
+    chart = (
+        alt.Chart(monthly_stats)
+        .transform_fold(
+            ["Morceaux écoutés", "Minutes écoutées"],
+            as_=["Type", "Valeur"]
+        )
+        .mark_line(point=True)
+        .encode(
+            x=alt.X(
+                "Mois:N",
+                sort=alt.SortField(
+                    field="Mois_num",
+                    order="ascending"
+                ),
+                title="Mois"
+            ),
+            y=alt.Y("Valeur:Q", title="Valeur"),
+            color=alt.Color("Type:N", title="Type"),
+            tooltip=[
+                alt.Tooltip("Mois:N", title="Mois"),
                 alt.Tooltip("Type:N", title="Type"),
                 alt.Tooltip("Valeur:Q", title="Valeur")
             ]
@@ -291,35 +332,17 @@ def showListeningTimeByHour(df, year_chosen):
 
     st.altair_chart(chart)
 
-def showListeningTimeByDayOfTheWeek(df, year_chosen):
-    df = df.copy()
-
+def calculateListeningTime(df, year_chosen):
+    #Filter according to the year chosen
     if year_chosen != "All time":
         df = df[df["Date"].dt.year == year_chosen]
 
-    df["Jour"] = df["Date"].dt.dayofweek
-    jours_labels = {0: "Lundi", 1: "Mardi", 2: "Mercredi", 3: "Jeudi", 4: "Vendredi", 5: "Samedi", 6: "Dimanche"}
+    totalsec = df['Listening Time'].sum()
+    totalhour = round(totalsec / 3600)
+    totaldays = totalhour // 24
+    modulototaldays = totalhour % 24
 
-    df_day = (
-        df.groupby("Jour")
-        .agg(Minutes_ecoutees=("Listening Time", lambda x: int(np.ceil(x.sum() / 60))))
-        .reset_index()
-    )
-
-    df_day["Jour_label"] = df_day["Jour"].map(jours_labels)
-
-    ordre_jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
-
-    base = alt.Chart(df_day).encode(
-        theta=alt.Theta("Minutes_ecoutees:Q", stack=True),
-        color=alt.Color("Jour_label:N", sort=ordre_jours, title="Jour de la semaine"),
-        order=alt.Order("Jour:Q"),
-        tooltip=[alt.Tooltip("Jour_label:N", title="Jour"), alt.Tooltip("Minutes_ecoutees:Q", title="Minutes")]
-    )
-
-    chart = base.mark_arc(outerRadius = 150)
-
-    st.altair_chart(chart)
+    return totalhour, totaldays, modulototaldays
 
 def showListeningTimeByNight(df, year_chosen):
     df = df.copy()
@@ -397,18 +420,6 @@ def listeningHistory(sheet):
     years = findEveryYearInDateColumn(df)
     year_chosen = st.selectbox("Choix de l'année", years)
 
-    #Calculate and display repartition of listening time by day of the week
-    st.subheader("📅 Répartition d'écoute par jour de la semaine")
-    showListeningTimeByDayOfTheWeek(df, year_chosen)
-
-    #Calculate and display evolution of listening time by hour
-    st.subheader("🕑 Tendance d'écoute par heure")
-    showListeningTimeByHour(df, year_chosen)
-
-    #Calculate and display evolution of listening time by month
-    st.subheader("📈 Évolution mensuelle de l’écoute")
-    showListeningTimeByMonth(df, year_chosen)
-
     data_types = ['Tableau', 'Graphique']
     type_data = st.radio('Type de données', data_types)
 
@@ -433,6 +444,29 @@ def listeningHistory(sheet):
         y_col_1 = "Nombre d'écoutes",
         y_col_2 = "Minutes écoutées"
     )
+
+    #Calculate and display top 50 of most streamed albums
+    st.subheader("💿 Top 50 des albums les plus écoutés")
+    top_albums = calculateTopAlbums(df, year_chosen)
+    printData(
+        type_data = type_data,
+        top = top_albums,
+        x_col = "Album",
+        y_col_1 = "Nombre d'écoutes",
+        y_col_2 = "Minutes écoutées"
+    )
+
+    #Calculate and display repartition of listening time by day of the week
+    st.subheader("📅 Répartition d'écoute par jour de la semaine")
+    showListeningTimeByDayOfTheWeek(df, year_chosen)
+
+    #Calculate and display evolution of listening time by month
+    st.subheader("📈 Évolution mensuelle de l’écoute")
+    showListeningTimeByMonth(df, year_chosen)
+
+    #Calculate and display evolution of listening time by hour
+    st.subheader("🕑 Tendance d'écoute par heure")
+    showListeningTimeByHour(df, year_chosen)
 
     #Calculate and display listening time by night
     st.subheader("🌙 Temps d'écoute jour/nuit")
