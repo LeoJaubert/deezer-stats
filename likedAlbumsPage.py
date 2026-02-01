@@ -122,7 +122,7 @@ def show_album_modal(album, link, album_info, tracklist):
 #--------------Code starts here--------------#
 def likedAlbums(sheet):
     df = sheet
-    st.title("💿 Albums likés")
+    st.title("💿 Albums likés", anchor = False)
     st.markdown("---")
 
     albumsDict = {}
@@ -139,7 +139,7 @@ def likedAlbums(sheet):
     #Sort in alphabetical order
     albumsDict = dict(sorted(albumsDict.items(), key=lambda item: item[0].lower()))
 
-    img_base64 = get_base64_image("placeholder_pics/placeholder-picture.jpg")
+    img_base64 = get_base64_image("pictures/placeholder-picture.jpg")
     placeholder = f"data:image/jpeg;base64,{img_base64}"
 
     #Print 4 by 4 albums with their picture and link to their Deezer page

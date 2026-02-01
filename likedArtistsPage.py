@@ -93,7 +93,7 @@ def show_artist_modal(artist, link, artist_info, top_songs):
 #--------------Code starts here--------------#
 def likedArtists(sheet):
     df = sheet
-    st.title("🧑‍🎤 Artistes likés")
+    st.title("🧑‍🎤 Artistes likés", anchor = False)
     st.markdown("---")
 
     artistsDict = {}
@@ -110,7 +110,7 @@ def likedArtists(sheet):
     #Sort in alphabetical order
     artistsDict = dict(sorted(artistsDict.items(), key = lambda item: item[0].lower()))
 
-    img_base64 = get_base64_image("placeholder_pics/placeholder-picture.jpg")
+    img_base64 = get_base64_image("pictures/placeholder-picture.jpg")
     placeholder = f"data:image/jpeg;base64,{img_base64}"
 
     #Print 4 by 4 artists with their picture

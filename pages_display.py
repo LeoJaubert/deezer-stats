@@ -20,7 +20,7 @@ def showPage(file_path, page):
     with st.spinner("Chargement..."):
         df = pd.read_excel(file_path, sheet_name = sheet)
         #Print title of the page
-        st.title(title)
+        st.title(title, anchor = False)
         st.markdown("---")
         #Transform dataframe in dict
         data_dict = {col: df[col].iloc[0] if len(df) > 0 else "" for col in df.columns}

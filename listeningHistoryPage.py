@@ -50,11 +50,16 @@ def showListeningTimeByYear(df):
             ),
             y=alt.Y(
                 "Valeur:Q",
-                title="Valeur"
+                title="Valeur",
+                axis=alt.Axis(
+                    grid=True,
+                    gridColor="grey",
+                    gridOpacity=0.25
+                )
             ),
             color=alt.Color(
                 "Type:N",
-                title="Type"
+                title="Légende"
             ),
             tooltip=[
                 alt.Tooltip("Année:O", title="Année"),
@@ -264,8 +269,16 @@ def showListeningTimeByMonth(df, year_chosen):
                 ),
                 title="Mois"
             ),
-            y=alt.Y("Valeur:Q", title="Valeur"),
-            color=alt.Color("Type:N", title="Type"),
+            y=alt.Y(
+                "Valeur:Q",
+                title="Valeur",
+                axis=alt.Axis(
+                    grid=True,
+                    gridColor="grey",
+                    gridOpacity=0.25
+                )
+            ),
+            color=alt.Color("Type:N", title="Légende"),
             tooltip=[
                 alt.Tooltip("Mois:N", title="Mois"),
                 alt.Tooltip("Type:N", title="Type"),
@@ -320,8 +333,16 @@ def showListeningTimeByHour(df, year_chosen):
                     labelExpr='datum.value + "h - " + (datum.value+1) + "h"'
                 )
             ),
-            y=alt.Y("Valeur:Q", title="Valeur"),
-            color=alt.Color("Type:N", title="Type"),
+            y=alt.Y(
+                "Valeur:Q",
+                title="Valeur",
+                axis=alt.Axis(
+                    grid=True,
+                    gridColor="grey",
+                    gridOpacity=0.25
+                )
+            ),
+            color=alt.Color("Type:N", title="Légende"),
             tooltip=[
                 alt.Tooltip("Heure_label:O", title="Heure de la journée"),
                 alt.Tooltip("Type:N", title="Type"),
@@ -405,12 +426,27 @@ def findFirstAndLastTrack(df, year_chosen):
 
     return first_track_title, first_track_artist, first_track_date, last_track_title, last_track_artist, last_track_date
 
+def calculateDiversity(df, year_chosen):
+    df = df.copy()
+
+    if year_chosen != "All time":
+        df = df[df["Date"].dt.year == year_chosen]
+
+    nb_tracks_listened = len(df)
+
+    nb_unique_tracks_listened = len(df[["Song Title", "Artist"]].drop_duplicates())
+
+    ratio_repetition = round(nb_tracks_listened / nb_unique_tracks_listened, 2)
+    ratio_diversite = round(nb_unique_tracks_listened / nb_tracks_listened * 100, 2)
+
+    return nb_tracks_listened, nb_unique_tracks_listened, ratio_repetition, ratio_diversite
+
 #--------------Code starts here--------------#
 def listeningHistory(sheet):
     df = sheet
     df = formatProperlyDataframe(df)
 
-    st.title("📊 Stats approfondies")
+    st.title("📊 Stats approfondies", anchor = False)
     st.markdown("---")
 
     #Calculate and display evolution of listening time by year
@@ -487,6 +523,10 @@ def listeningHistory(sheet):
     st.subheader("ℹ️ Premier et dernier morceau écouté")
     first_track_title, first_track_artist, first_track_date, last_track_title, last_track_artist, last_track_date = findFirstAndLastTrack(df, year_chosen)
     st.text(f"Premier morceau: {first_track_title} de {first_track_artist} le {first_track_date}\nDernier morceau: {last_track_title} de {last_track_artist} le {last_track_date}")
+
+    st.subheader("♾️ Diversité des morceaux écoutés")
+    nb_tracks_listened, nb_unique_tracks_listened, ratio_repetition, ratio_diversite = calculateDiversity(df, year_chosen)
+    st.text(f"Total morceaux écoutés: {nb_tracks_listened}\nDont uniques: {nb_unique_tracks_listened}\nRatio répétition: {ratio_repetition} (Nombre moyen d'écoutes d'un même morceau)\nRatio diversité: {ratio_diversite} % (Pourcentage de morceaux écoutés une seule fois)")
 
     st.markdown("---")
     st.caption("_NB: Les morceaux écoutés pendant moins de 30 secondes ne sont pas comptabilisés, comme dans les statistiques officielles._")
