@@ -16,7 +16,7 @@ def format_duration(seconds):
         return f"{minutes} minute" if minutes == 1 else f"{minutes} minutes"
 
 #API call to obtain infos about album
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner = False)
 def get_album_info_from_id(album_link):
     try:
         album_id = album_link.rstrip('/').split('/')[-1]
@@ -78,7 +78,7 @@ def get_tracklist_from_album(url):
     except:
         return None
 
-#Popup appearing when clicking on the button containing infos about artist
+#Popup appearing when clicking on the button containing infos about album
 @st.dialog("Détails de l'album")
 def show_album_modal(album, link, album_info, tracklist):
 
@@ -115,9 +115,26 @@ def show_album_modal(album, link, album_info, tracklist):
     with right_col:
         st.markdown("## ⏯ Tracklist")
 
-        #Print the full tracklist of the album with a hypertext link
-        for track_id, track in tracklist.items():
-            st.write(f"🎵 [{track['title']}]({track['link']})")
+        tracks = list(tracklist.items())
+
+        #Avoid showing "transparent" song of previous popup when there are less than 5 tracks in the album
+        while len(tracks) < 5:
+            tracks.append((None, None))
+
+        #Print 5 first songs of album, or else print blank space to fill
+        for track_id, track in tracks[:5]:
+            if track:
+                st.write(f"🎵 [{track['title']}]({track['link']})")
+            else:
+                st.markdown("&nbsp;", unsafe_allow_html = True)
+
+        #Message if there are more than 5 songs in album
+        remaining = len(tracklist) - 5
+        if remaining > 0:
+            st.text(
+                f"+ {remaining} autre{'s' if remaining > 1 else ''} "
+                f"titre{'s' if remaining > 1 else ''}"
+            )
 
 #--------------Code starts here--------------#
 def likedAlbums(sheet):
@@ -178,7 +195,6 @@ def likedAlbums(sheet):
                     #Button with album name
                     if st.button(
                         album,
-                        key = f"btn_{album}_{i}_{j}",
                         use_container_width = True,
                         type = "primary"
                     ):

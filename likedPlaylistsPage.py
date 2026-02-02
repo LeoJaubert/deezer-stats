@@ -15,7 +15,7 @@ def format_duration(seconds):
         return f"{minutes} minute" if minutes == 1 else f"{minutes} minutes"
 
 #API call to obtain infos about playlist
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner = False)
 def get_playlist_info_from_id(playlist_link):
     try:
         playlist_id = playlist_link.rstrip('/').split('/')[-1]
@@ -165,7 +165,6 @@ def likedPlaylists(sheet):
                     #Button with playlist name
                     if st.button(
                         playlist,
-                        key = f"btn_{playlist}_{i}_{j}",
                         use_container_width = True,
                         type = "primary"
                     ):

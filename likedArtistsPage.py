@@ -23,10 +23,10 @@ def get_artist_info_from_id(artist_link):
     except Exception:
         return None
 
-#API call to obtain the 3 top songs from tracklist
+#API call to obtain the 5 top songs from tracklist
 def get_top_songs_from_tracklist(url):
     try:
-        url = url + "/top?limit=3"
+        url = url + "/top?limit=5"
         response = requests.get(url)
         data = response.json()
 
@@ -43,6 +43,7 @@ def get_top_songs_from_tracklist(url):
             }
 
         return top_songs_dict
+
     except:
         return None
 
@@ -55,7 +56,6 @@ def get_base64_image(path):
 #Popup appearing when clicking on the button containing infos about artist
 @st.dialog("Détails de l'artiste")
 def show_artist_modal(artist, link, artist_info, top_songs):
-
     left_col, right_col = st.columns([1, 1])
 
     with left_col:
@@ -86,7 +86,7 @@ def show_artist_modal(artist, link, artist_info, top_songs):
     with right_col:
         st.markdown("## 🔥 Top titres")
 
-        #Print the top 3 songs of the artist with a hypertext link
+        #Print the top 5 songs of the artist with a hypertext link
         for top_song_id, top_song in top_songs.items():
             st.write(f"🎵 [{top_song['title']}]({top_song['link']})")
 
@@ -149,7 +149,6 @@ def likedArtists(sheet):
                     #Button with artist name
                     if st.button(
                         artist,
-                        key = f"btn_{artist}_{i}_{j}",
                         use_container_width = True,
                         type = "primary"
                     ):
