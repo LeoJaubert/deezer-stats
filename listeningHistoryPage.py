@@ -359,11 +359,11 @@ def calculateListeningTime(df, year_chosen):
         df = df[df["Date"].dt.year == year_chosen]
 
     totalsec = df['Listening Time'].sum()
-    totalhour = round(totalsec / 3600)
-    totaldays = totalhour // 24
-    modulototaldays = totalhour % 24
+    totalhours = round(totalsec / 3600)
+    totaldays = totalhours // 24
+    modulototaldays = totalhours % 24
 
-    return totalhour, totaldays, modulototaldays
+    return totalhours, totaldays, modulototaldays
 
 def showListeningTimeByNight(df, year_chosen):
     df = df.copy()
@@ -441,6 +441,24 @@ def calculateDiversity(df, year_chosen):
 
     return nb_tracks_listened, nb_unique_tracks_listened, ratio_repetition, ratio_diversite
 
+def stat_card(value, subtitle):
+    st.markdown(
+        f"""<div style="background: #dddde0;border: 1px solid rgba(162, 56, 255, 0.18);border-radius: 14px;padding: 18px 20px;margin-bottom: 12px;box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);">
+              <div style="color: #000000;font-size: 1.55rem;font-weight: 700;margin-bottom: 6px;">{value}</div>
+              <div style="color: #000000;font-size: 0.78rem;text-transform: uppercase;letter-spacing: 0.06em;">{subtitle}</div>
+            </div>""",
+        unsafe_allow_html = True
+    )
+
+def stat_card_v2(title, value):
+    st.markdown(
+        f"""<div style="background: #dddde0;border: 1px solid rgba(162, 56, 255, 0.18);border-radius: 14px;padding: 18px 20px;margin-bottom: 12px;box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);">
+              <div style="color: #000000;font-size: 0.78rem;text-transform: uppercase;letter-spacing: 0.06em;margin-bottom: 6px;">{title}</div>
+              <div style="color: #000000;font-size: 1.05rem;font-weight: 600;line-height: 1.5;">{value}</div>
+            </div>""",
+        unsafe_allow_html = True
+    )
+
 #--------------Code starts here--------------#
 def listeningHistory(sheet):
     df = sheet
@@ -450,17 +468,31 @@ def listeningHistory(sheet):
     st.markdown("---")
 
     #Calculate and display evolution of listening time by year
-    st.subheader("📶 Évolution annuelle de l’écoute")
+    st.subheader("📶 Évolution annuelle de l'écoute", anchor = False)
     showListeningTimeByYear(df)
 
     years = findEveryYearInDateColumn(df)
-    year_chosen = st.selectbox("Choix de l'année", years)
+    col_sel, col_radio = st.columns([1, 3], gap = "xxlarge")
+    with col_sel:
+        year_chosen = st.selectbox("Année", years)
+    with col_radio:
+        type_data = st.radio(
+            label = "Affichage des top 50",
+            options = ["Tableau", "Graphique"],
+            horizontal = True,
+        )
 
-    data_types = ['Tableau', 'Graphique']
-    type_data = st.radio('Type de données', data_types)
+    totalhours, totaldays, modulototaldays = calculateListeningTime(df, year_chosen)
+    nb_tracks, nb_unique, ratio_rep, ratio_div = calculateDiversity(df, year_chosen)
+
+    k1, k2 = st.columns(2, gap = "medium")
+    with k1:
+        stat_card(value = totalhours, subtitle = "heures")
+    with k2:
+        stat_card(value = f"{nb_tracks: }", subtitle = "morceaux")
 
     #Calculate and display top 50 of most streamed artists
-    st.subheader("🧑‍🎤 Top 50 des artistes les plus écoutés")
+    st.subheader("🧑‍🎤 Top 50 — Artistes", anchor = False)
     top_artists = calculateTopArtists(df, year_chosen)
     printData(
         type_data = type_data,
@@ -470,8 +502,8 @@ def listeningHistory(sheet):
         y_col_2 = "Minutes écoutées"
     )
 
-    #Calculate and display top 50 of most streamed songs
-    st.subheader("🎵 Top 50 des morceaux les plus écoutés")
+    #Calculate and display top 50 of most streamed tracks
+    st.subheader("🎵 Top 50 — Morceaux", anchor = False)
     top_tracks = calculateTopTracks(df, year_chosen)
     printData(
         type_data = type_data,
@@ -482,7 +514,7 @@ def listeningHistory(sheet):
     )
 
     #Calculate and display top 50 of most streamed albums
-    st.subheader("💿 Top 50 des albums les plus écoutés")
+    st.subheader("💿 Top 50 — Albums", anchor = False)
     top_albums = calculateTopAlbums(df, year_chosen)
     printData(
         type_data = type_data,
@@ -493,41 +525,73 @@ def listeningHistory(sheet):
     )
 
     #Calculate and display repartition of listening time by day of the week
-    st.subheader("📅 Répartition d'écoute par jour de la semaine")
+    st.subheader("📅 Répartition par jour de la semaine", anchor = False)
     showListeningTimeByDayOfTheWeek(df, year_chosen)
 
     #Calculate and display evolution of listening time by month
-    st.subheader("📈 Évolution mensuelle de l’écoute")
+    st.subheader("📈 Évolution mensuelle", anchor = False)
     showListeningTimeByMonth(df, year_chosen)
 
     #Calculate and display evolution of listening time by hour
-    st.subheader("🕑 Tendance d'écoute par heure")
+    st.subheader("🕑 Tendance par heure", anchor = False)
     showListeningTimeByHour(df, year_chosen)
 
     #Calculate and display listening time by night
-    st.subheader("🌙 Temps d'écoute jour/nuit")
-    night_percentage = showListeningTimeByNight(df, year_chosen)
-    st.text(f"Jour: {100 - night_percentage} % (6h - 22h)\nNuit: {night_percentage} %   (22h - 6h)")
-
-    #Calculate and print listening time
-    st.subheader("🔢 Nombre d'heures écoutées")
-    totalhour, totaldays, modulototaldays = calculateListeningTime(df, year_chosen)
-    st.text(f"Temps d'écoute: {totalhour} heures, soit {totaldays} jours et {modulototaldays} heures")
-
-    #Calculate and print day with most listening time
-    st.subheader("🔝 Jour avec le plus de minutes écoutées")
-    mostlistenedday, tracksvalue, minutesvalue = findMostListenedDay(df, year_chosen)
-    st.text(f"Jour: {mostlistenedday}, avec {tracksvalue} morceaux écoutés et {minutesvalue} minutes écoutées")
-
-    #Calculate and print first and last track listened
-    st.subheader("ℹ️ Premier et dernier morceau écouté")
-    first_track_title, first_track_artist, first_track_date, last_track_title, last_track_artist, last_track_date = findFirstAndLastTrack(df, year_chosen)
-    st.text(f"Premier morceau: {first_track_title} de {first_track_artist} le {first_track_date}\nDernier morceau: {last_track_title} de {last_track_artist} le {last_track_date}")
-
-    st.subheader("♾️ Diversité des morceaux écoutés")
-    nb_tracks_listened, nb_unique_tracks_listened, ratio_repetition, ratio_diversite = calculateDiversity(df, year_chosen)
-    st.text(f"Total morceaux écoutés: {nb_tracks_listened}\nDont uniques: {nb_unique_tracks_listened}\nRatio répétition: {ratio_repetition} (Nombre moyen d'écoutes d'un même morceau)\nRatio diversité: {ratio_diversite} % (Pourcentage de morceaux écoutés une seule fois)")
+    st.subheader("🌙 Jour / Nuit", anchor = False)
+    night_pct = showListeningTimeByNight(df, year_chosen)
+    day_pct = 100 - night_pct
+    st.markdown(
+        f"""<div style="display:flex; gap:0; border-radius:10px; overflow:hidden; height:28px; margin:8px 0 4px;">
+              <div style="width:{day_pct}%; background:linear-gradient(90deg,#A238FF,#c060ff);
+                          display:flex; align-items:center; justify-content:center;
+                          color:#fff; font-size:0.8rem; font-weight:600;">
+                  ☀️ {day_pct}%
+              </div>
+              <div style="width:{night_pct}%; background:linear-gradient(90deg,#1e1e34,#2a2a4a);
+                          display:flex; align-items:center; justify-content:center;
+                          color:#8080a0; font-size:0.8rem; font-weight:600;">
+                  🌙 {night_pct}%
+              </div>
+            </div>
+            <p style="color:#5a5a72; font-size:0.75rem; margin:0;">Jour 6h–22h · Nuit 22h–6h</p>""",
+        unsafe_allow_html=True,
+    )
 
     st.markdown("---")
-    st.caption("_NB: Les morceaux écoutés pendant moins de 30 secondes ne sont pas comptabilisés, comme dans les statistiques officielles._")
-    st.caption("_NB: Les morceaux en featuring, s'ils sont affichés comme tels dans les artistes, sont comptabilisés pour tous les artistes en featuring._")
+
+    #Calculate and display listening time
+    stat_card_v2(
+        title = "⏱️ Temps d'écoute total",
+        value = f"<span class='accent'>{totalhours}</span> heures, soit <span class='accent'>{totaldays}</span> jours et {modulototaldays} heures"
+    )
+
+    #Calculate and display day with most listening time
+    most_day, tracks_val, minutes_val = findMostListenedDay(df, year_chosen)
+    stat_card_v2(
+        title = "🔝 Jour le plus écouté",
+        value = f"<span class='accent'>{most_day}</span> - {tracks_val} morceaux - {minutes_val} minutes"
+    )
+
+    #Calculate and display first and last track listened
+    (ft_title, ft_artist, ft_date,
+     lt_title, lt_artist, lt_date) = findFirstAndLastTrack(df, year_chosen)
+    stat_card_v2(
+        title = "⏮️ Premier morceau écouté",
+        value = f"<span class='accent'>{ft_title}</span> de {ft_artist} — {ft_date}"
+    )
+    stat_card_v2(
+        title = "⏭️ Dernier morceau écouté",
+        value = f"<span class='accent'>{lt_title}</span> de {lt_artist} — {lt_date}"
+    )
+
+    #Calculate and display diversity of music
+    stat_card_v2(
+        title = "♾️ Diversité",
+        value = f"<span class='accent'>{ratio_div}%</span> de morceaux écoutés une seule fois · "
+        f"ratio répétition <span class='accent'>{ratio_rep}×</span> "
+        f"morceaux uniques: {nb_unique}"
+    )
+
+    st.markdown("---")
+    st.caption("_Les morceaux écoutés moins de 30 secondes ne sont pas comptabilisés, comme dans les statistiques officielles._")
+    st.caption("_Les morceaux en featuring sont comptabilisés pour tous les artistes en featuring._")
