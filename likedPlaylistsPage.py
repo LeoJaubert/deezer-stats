@@ -1,6 +1,7 @@
 import base64
 import streamlit as st
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def format_duration(seconds):
     minutes = seconds // 60
@@ -37,6 +38,20 @@ def get_playlist_info_from_id(playlist_link):
 
     except Exception:
         return None
+
+#Do all API requests in bulk
+@st.cache_data(show_spinner = False)
+def get_all_playlists_info(playlist_links: tuple):
+    def fetch(playlist_link):
+        return playlist_link, get_playlist_info_from_id(playlist_link)
+
+    results = {}
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(fetch, link): link for link in playlist_links}
+        for future in as_completed(futures):
+            link, info = future.result()
+            results[link] = info
+    return results
 
 #Function needed to use placeholder in HTML
 def get_base64_image(path):
@@ -131,12 +146,14 @@ def likedPlaylists(sheet):
 
     #Print 4 by 4 playlists with their picture and link to their Deezer page
     playlists = list(playlistsDict.items())
+    all_links = tuple(link for _, link in playlists)
+    playlists_info = get_all_playlists_info(all_links)
     row_items = 4
     for i in range(0, len(playlists), row_items):
         cols = st.columns(row_items)
         for j, (playlist, link) in enumerate(playlists[i:i+row_items]):
             with cols[j]:
-                playlist_info = get_playlist_info_from_id(link)
+                playlist_info = playlists_info.get(link)
                 #Correct format of the link
                 if not link.startswith("http"):
                     link = "https://" + link.lstrip("/")

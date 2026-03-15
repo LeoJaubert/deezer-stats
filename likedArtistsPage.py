@@ -1,6 +1,7 @@
 import base64
 import streamlit as st
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 #API call to obtain infos about artist
 @st.cache_data(show_spinner = False)
@@ -22,6 +23,20 @@ def get_artist_info_from_id(artist_link):
 
     except Exception:
         return None
+
+#Do all API requests in bulk
+@st.cache_data(show_spinner = False)
+def get_all_artists_info(artist_links: tuple):
+    def fetch(artist_link):
+        return artist_link, get_artist_info_from_id(artist_link)
+
+    results = {}
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(fetch, link): link for link in artist_links}
+        for future in as_completed(futures):
+            link, info = future.result()
+            results[link] = info
+    return results
 
 #API call to obtain the 5 top songs from tracklist
 def get_top_songs_from_tracklist(url):
@@ -115,12 +130,14 @@ def likedArtists(sheet):
 
     #Print 4 by 4 artists with their picture
     artists = list(artistsDict.items())
+    all_links = tuple(link for _, link in artists)
+    artists_info = get_all_artists_info(all_links)
     row_items = 4
     for i in range(0, len(artists), row_items):
         cols = st.columns(row_items)
         for j, (artist, link) in enumerate(artists[i:i+row_items]):
             with cols[j]:
-                artist_info = get_artist_info_from_id(link)
+                artist_info = artists_info.get(link)
                 #Correct format of the link
                 if not link.startswith("http"):
                     link = "https://" + link.lstrip("/")

@@ -441,20 +441,12 @@ def calculateDiversity(df, year_chosen):
 
     return nb_tracks_listened, nb_unique_tracks_listened, ratio_repetition, ratio_diversite
 
-def stat_card(value, subtitle):
+def stat_card(title, value, description):
     st.markdown(
         f"""<div style="background: #dddde0;border: 1px solid rgba(162, 56, 255, 0.18);border-radius: 14px;padding: 18px 20px;margin-bottom: 12px;box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);">
-              <div style="color: #000000;font-size: 1.55rem;font-weight: 700;margin-bottom: 6px;">{value}</div>
-              <div style="color: #000000;font-size: 0.78rem;text-transform: uppercase;letter-spacing: 0.06em;">{subtitle}</div>
-            </div>""",
-        unsafe_allow_html = True
-    )
-
-def stat_card_v2(title, value):
-    st.markdown(
-        f"""<div style="background: #dddde0;border: 1px solid rgba(162, 56, 255, 0.18);border-radius: 14px;padding: 18px 20px;margin-bottom: 12px;box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);">
-              <div style="color: #000000;font-size: 0.78rem;text-transform: uppercase;letter-spacing: 0.06em;margin-bottom: 6px;">{title}</div>
-              <div style="color: #000000;font-size: 1.05rem;font-weight: 600;line-height: 1.5;">{value}</div>
+              <div style="color: #6a6a82;font-size: 0.75rem;text-transform: uppercase;letter-spacing: 0.06em;margin-bottom: 4px;">{title}</div>
+              <div style="color: #000000;font-size: 2rem;font-weight: 700;margin-bottom: 4px;">{value}</div>
+              <div style="color: #4a4a5a;font-size: 0.8rem;font-weight: 500;">{description}</div>
             </div>""",
         unsafe_allow_html = True
     )
@@ -482,14 +474,71 @@ def listeningHistory(sheet):
             horizontal = True,
         )
 
+    #Calculate all infos that will be displayed in stat cards
     totalhours, totaldays, modulototaldays = calculateListeningTime(df, year_chosen)
     nb_tracks, nb_unique, ratio_rep, ratio_div = calculateDiversity(df, year_chosen)
+    most_day, tracks_val, minutes_val = findMostListenedDay(df, year_chosen)
+    ft_title, ft_artist, ft_date, lt_title, lt_artist, lt_date = findFirstAndLastTrack(df, year_chosen)
 
+    #Display listening time and number of listened tracks
     k1, k2 = st.columns(2, gap = "medium")
     with k1:
-        stat_card(value = totalhours, subtitle = "heures")
+        stat_card(
+            title = "Temps d'écoute",
+            value = totalhours,
+            description = f"heures, soit {totaldays} jours et {modulototaldays} heures"
+        )
     with k2:
-        stat_card(value = f"{nb_tracks: }", subtitle = "morceaux")
+        stat_card(
+            title = "Morceaux",
+            value = f"{nb_tracks:,}".replace(",", " "),
+            description = "titres écoutés"
+        )
+
+    #Display day with most listening time and diversity of listened tracks
+    k1, k2 = st.columns(2, gap = "medium")
+    with k1:
+        stat_card(
+            title = "Jour le plus écouté",
+            value = most_day,
+            description = f"{tracks_val} morceaux - {minutes_val} minutes"
+        )
+    with k2:
+        stat_card(
+            title = "Diversité",
+            value = ratio_div,
+            description = "% de morceaux écoutés une seule fois"
+        )
+
+    #Display stats about diversity
+    k1, k2 = st.columns(2, gap = "medium")
+    with k1:
+        stat_card(
+            title = "Ratio répétition",
+            value = ratio_rep,
+            description = "écoutes d'un même morceau en moyenne"
+        )
+    with k2:
+        stat_card(
+            title = "Morceaux uniques",
+            value = nb_unique,
+            description = "titres écoutés une seule fois"
+        )
+
+    #Display first and last track listened
+    k1, k2 = st.columns(2, gap = "medium")
+    with k1:
+        stat_card(
+            title = "Premier morceau écouté",
+            value = ft_title,
+            description = f"de {ft_artist} - {ft_date}"
+        )
+    with k2:
+        stat_card(
+            title = "Dernier morceau écouté",
+            value = lt_title,
+            description = f" de {lt_artist} - {lt_date}"
+        )
 
     #Calculate and display top 50 of most streamed artists
     st.subheader("🧑‍🎤 Top 50 — Artistes", anchor = False)
@@ -555,41 +604,6 @@ def listeningHistory(sheet):
             </div>
             <p style="color:#5a5a72; font-size:0.75rem; margin:0;">Jour 6h–22h · Nuit 22h–6h</p>""",
         unsafe_allow_html=True,
-    )
-
-    st.markdown("---")
-
-    #Calculate and display listening time
-    stat_card_v2(
-        title = "⏱️ Temps d'écoute total",
-        value = f"<span class='accent'>{totalhours}</span> heures, soit <span class='accent'>{totaldays}</span> jours et {modulototaldays} heures"
-    )
-
-    #Calculate and display day with most listening time
-    most_day, tracks_val, minutes_val = findMostListenedDay(df, year_chosen)
-    stat_card_v2(
-        title = "🔝 Jour le plus écouté",
-        value = f"<span class='accent'>{most_day}</span> - {tracks_val} morceaux - {minutes_val} minutes"
-    )
-
-    #Calculate and display first and last track listened
-    (ft_title, ft_artist, ft_date,
-     lt_title, lt_artist, lt_date) = findFirstAndLastTrack(df, year_chosen)
-    stat_card_v2(
-        title = "⏮️ Premier morceau écouté",
-        value = f"<span class='accent'>{ft_title}</span> de {ft_artist} — {ft_date}"
-    )
-    stat_card_v2(
-        title = "⏭️ Dernier morceau écouté",
-        value = f"<span class='accent'>{lt_title}</span> de {lt_artist} — {lt_date}"
-    )
-
-    #Calculate and display diversity of music
-    stat_card_v2(
-        title = "♾️ Diversité",
-        value = f"<span class='accent'>{ratio_div}%</span> de morceaux écoutés une seule fois · "
-        f"ratio répétition <span class='accent'>{ratio_rep}×</span> "
-        f"morceaux uniques: {nb_unique}"
     )
 
     st.markdown("---")

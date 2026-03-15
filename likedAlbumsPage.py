@@ -2,6 +2,7 @@ import base64
 from datetime import datetime
 import streamlit as st
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def format_duration(seconds):
     minutes = seconds // 60
@@ -48,6 +49,20 @@ def get_album_info_from_id(album_link):
 
     except Exception:
         return None
+
+#Do all API requests in bulk
+@st.cache_data(show_spinner = False)
+def get_all_albums_info(album_links: tuple):
+    def fetch(album_link):
+        return album_link, get_album_info_from_id(album_link)
+
+    results = {}
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(fetch, link): link for link in album_links}
+        for future in as_completed(futures):
+            link, info = future.result()
+            results[link] = info
+    return results
 
 #Function needed to use placeholder in HTML
 def get_base64_image(path):
@@ -161,12 +176,14 @@ def likedAlbums(sheet):
 
     #Print 4 by 4 albums with their picture and link to their Deezer page
     albums = list(albumsDict.items())
+    all_links = tuple(link for _, link in albums)
+    albums_info = get_all_albums_info(all_links)
     row_items = 4
     for i in range(0, len(albums), row_items):
         cols = st.columns(row_items)
         for j, (album, link) in enumerate(albums[i:i+row_items]):
             with cols[j]:
-                album_info = get_album_info_from_id(link)
+                album_info = albums_info.get(link)
                 #Correct format of the link
                 if not link.startswith("http"):
                     link = "https://" + link.lstrip("/")
