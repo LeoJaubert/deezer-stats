@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from pages_display import showPage
+from pages_display import showAllInfoPage
 from likedArtistsPage import likedArtists
 from likedAlbumsPage import likedAlbums
 from likedPlaylistsPage import likedPlaylists
@@ -12,17 +12,14 @@ def loadFile(file_path):
     return {sheet_name: file.parse(sheet_name) for sheet_name in file.sheet_names}
 
 if __name__ == "__main__":
-    #Not so bad method to reduce size of picture without decentering it
     col1, col2, col3 = st.sidebar.columns([1, 5, 1])
     with col2:
         st.image("pictures/deezer-logo-coeur.jpg")
 
-    #Navigation menu
     st.sidebar.subheader("The unofficial Deezer stats tracker", divider = "grey")
-
     page = st.sidebar.selectbox(
         label = "Page à afficher",
-        options = ("Détails du compte Deezer", "Profil de l'utilisateur", "Notifications", "Options de paiement", "Misc", "Artistes likés", "Albums likés", "Playlists likées", "Stats approfondies")
+        options = ("Informations du compte", "Artistes likés", "Albums likés", "Playlists likées", "Stats approfondies")
     )
 
     file_path = st.sidebar.file_uploader(
@@ -30,13 +27,14 @@ if __name__ == "__main__":
         type = ["xlsx"],
         help = "Fichier récupéré via Deezer de la forme 'deezer-data_xxx.xlsx'"
     )
+
     if file_path is None:
-        st.warning("Veuillez charger un fichier Deezer pour utiliser l’application")
+        st.warning("Veuillez charger un fichier Deezer pour utiliser l'application")
         st.stop()
+
     with st.spinner("Chargement du fichier en cours"):
         all_sheets = loadFile(file_path)
 
-    #Call to corresponding page function
     if page == "Artistes likés":
         likedArtists(all_sheets["4_favoriteArtist"])
     elif page == "Albums likés":
@@ -46,4 +44,4 @@ if __name__ == "__main__":
     elif page == "Stats approfondies":
         listeningHistory(all_sheets["10_listeningHistory"])
     else:
-        showPage(file_path, page)
+        showAllInfoPage(file_path)
