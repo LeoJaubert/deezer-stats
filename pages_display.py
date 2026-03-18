@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 
 def showAllInfoPage(file_path):
+    #Every page that is used for the app with misc info
     sections = [
         {"sheet": "1_creationData", "title": "📊 Détails du compte Deezer"},
         {"sheet": "2_customizationData", "title": "🧍 Profil de l'utilisateur"},

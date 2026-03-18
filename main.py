@@ -3,6 +3,7 @@ import pandas as pd
 from pages_display import showAllInfoPage
 from likedArtistsPage import likedArtists
 from likedAlbumsPage import likedAlbums
+from likedPodcastsPage import likedPodcasts
 from likedPlaylistsPage import likedPlaylists
 from listeningHistoryPage import listeningHistory
 
@@ -17,10 +18,6 @@ if __name__ == "__main__":
         st.image("pictures/deezer-logo-coeur.jpg")
 
     st.sidebar.subheader("The unofficial Deezer stats tracker", divider = "grey")
-    page = st.sidebar.selectbox(
-        label = "Page à afficher",
-        options = ("Informations du compte", "Artistes likés", "Albums likés", "Playlists likées", "Stats approfondies")
-    )
 
     file_path = st.sidebar.file_uploader(
         label = "Choisis ton fichier Deezer (.xlsx)",
@@ -35,10 +32,33 @@ if __name__ == "__main__":
     with st.spinner("Chargement du fichier en cours"):
         all_sheets = loadFile(file_path)
 
+    #Display only page with default options (even for unused account it will work)
+    available_options = ["Informations du compte"]
+
+    #Then if and only if user has favorite artists or something it will display to avoid errors
+    if "4_favoriteArtist" in all_sheets:
+        available_options.append("Artistes likés")
+    if "5_favoriteAlbum" in all_sheets:
+        available_options.append("Albums likés")
+    if "6_favoritePodcast" in all_sheets:
+        available_options.append("Podcasts likés")
+    if "7_favoritePlaylist" in all_sheets:
+        available_options.append("Playlists likées")
+    if "10_listeningHistory" in all_sheets:
+        available_options.append("Stats approfondies")
+
+    #Show only pages with content
+    page = st.sidebar.selectbox(
+        label = "Page à afficher",
+        options = available_options
+    )
+
     if page == "Artistes likés":
         likedArtists(all_sheets["4_favoriteArtist"])
     elif page == "Albums likés":
         likedAlbums(all_sheets["5_favoriteAlbum"])
+    elif page == "Podcasts likés":
+        likedPodcasts(all_sheets["6_favoritePodcast"])
     elif page == "Playlists likées":
         likedPlaylists(all_sheets["7_favoritePlaylist"])
     elif page == "Stats approfondies":

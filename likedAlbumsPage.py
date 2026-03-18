@@ -194,7 +194,7 @@ def likedAlbums(sheet):
                                 <img src="{placeholder}" alt="{album}" width="70" style="border-radius:8px; box-shadow:0 2px 8px #0001; display:block;"/>
                                 <span style="font-size: 0.95em; font-weight: 600; text-align: center; display: block; color: #222; margin-top: 6px;">{album}</span>
                             </div>""",
-                        unsafe_allow_html=True
+                        unsafe_allow_html = True
                     )
                 else:
                     url = album_info["url"]

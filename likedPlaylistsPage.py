@@ -82,7 +82,7 @@ def get_first_songs_of_playlist(url):
     except:
         return None
 
-#Popup appearing when clicking on the button containing infos about artist
+#Popup appearing when clicking on the button containing infos about playlist
 @st.dialog("Détails de la playlist")
 def show_playlist_modal(playlist, link, playlist_info, first_songs):
 
@@ -118,7 +118,7 @@ def show_playlist_modal(playlist, link, playlist_info, first_songs):
     with right_col:
         st.markdown("## 🔥 Derniers titres")
 
-        #Print the top 3 songs of the artist with a hypertext link
+        #Print the last 5 songs of the playlist with a hypertext link
         for top_song_id, song in first_songs.items():
             st.write(f"🎵 [{song['title']}]({song['link']})")
 
@@ -134,7 +134,6 @@ def likedPlaylists(sheet):
         link = df.iloc[i]["Link"]
         playlistsDict[playlist] = link
 
-    # Barre de recherche
     search = st.text_input(f"🔎 Rechercher parmi les {len(df)} playlists :")
     if search:
         playlistsDict = {k: v for k, v in playlistsDict.items() if search.lower() in k.lower()}
@@ -164,7 +163,7 @@ def likedPlaylists(sheet):
                                 <img src="{placeholder}" alt="{playlist}" width="70" style="border-radius:8px; box-shadow:0 2px 8px #0001; display:block;"/>
                                 <span style="font-size: 0.95em; font-weight: 600; text-align: center; display: block; color: #222; margin-top: 6px;">{playlist}</span>
                             </div>""",
-                        unsafe_allow_html=True
+                        unsafe_allow_html = True
                     )
                 else:
                     url = playlist_info["url"]
