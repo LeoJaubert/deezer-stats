@@ -148,7 +148,7 @@ def show_album_modal(album, link, album_info, tracklist):
         if remaining > 0:
             st.text(
                 f"+ {remaining} autre{'s' if remaining > 1 else ''} "
-                f"titre{'s' if remaining > 1 else ''}"
+                f"morceau{'x' if remaining > 1 else ''}"
             )
 
 #--------------Code starts here--------------#

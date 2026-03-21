@@ -5,6 +5,7 @@ from likedArtistsPage import likedArtists
 from likedAlbumsPage import likedAlbums
 from likedPodcastsPage import likedPodcasts
 from likedPlaylistsPage import likedPlaylists
+from favoriteSongsPage import favoriteSongs
 from listeningHistoryPage import listeningHistory
 
 @st.cache_data(show_spinner = False)
@@ -44,12 +45,14 @@ if __name__ == "__main__":
         available_options.append("Podcasts likés")
     if "7_favoritePlaylist" in all_sheets:
         available_options.append("Playlists likées")
+    if "8_favoriteSong" in all_sheets:
+        available_options.append("Stats des morceaux likés")
     if "10_listeningHistory" in all_sheets:
-        available_options.append("Stats approfondies")
+        available_options.append("Stats d'écoute")
 
     #Show only pages with content
     page = st.sidebar.selectbox(
-        label = "Page à afficher",
+        label = "Menu",
         options = available_options
     )
 
@@ -61,7 +64,9 @@ if __name__ == "__main__":
         likedPodcasts(all_sheets["6_favoritePodcast"])
     elif page == "Playlists likées":
         likedPlaylists(all_sheets["7_favoritePlaylist"])
-    elif page == "Stats approfondies":
+    elif page == "Stats des morceaux likés":
+        favoriteSongs(all_sheets["8_favoriteSong"])
+    elif page == "Stats d'écoute":
         listeningHistory(all_sheets["10_listeningHistory"])
     else:
         showAllInfoPage(file_path)

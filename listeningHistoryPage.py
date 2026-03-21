@@ -456,7 +456,7 @@ def listeningHistory(sheet):
     df = sheet
     df = formatProperlyDataframe(df)
 
-    st.title("📊 Stats approfondies", anchor = False)
+    st.title("📊 Stats d'écoute", anchor = False)
     st.markdown("---")
 
     #Calculate and display evolution of listening time by year
