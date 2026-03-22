@@ -1,12 +1,9 @@
-import pandas as pd
 import streamlit as st
-import numpy as np
-import altair as alt
 
 def calculateLikedTracksStats(df):
     #Calculate number of favorite tracks
     nb_morceaux = len(df)
-    
+
     #Calculate number of different artists in all favorite tracks
     df_artists = df.copy()
     df_artists["Artists"] = df_artists["Artists"].str.split(",")
@@ -18,10 +15,10 @@ def calculateLikedTracksStats(df):
         .str.strip()
     )
     nb_artistes = df_artists["Artists"].nunique()
-    
+
     #Calculate number of different albums in favorite tracks
     nb_albums = df["Album Title"].nunique()
-    
+
     return nb_morceaux, nb_artistes, nb_albums
 
 def calculateTopArtists(df):
@@ -76,14 +73,13 @@ def calculateTopAlbums(df):
 def colorTopRows(row):
     if row.name == 0:
         return ["background-color: #FFD700"] * len(row)
-    elif row.name == 1:
+    if row.name == 1:
         return ["background-color: #C0C0C0"] * len(row)
-    elif row.name == 2:
+    if row.name == 2:
         return ["background-color: #CD7F32"] * len(row)
-    elif row.name >= 3 and row.name <= 9:
+    if row.name >= 3 and row.name <= 9:
         return ["background-color: #D9ADFF"] * len(row)
-    else:
-        return [""] * len(row)
+    return [""] * len(row)
 
 def printData(type_data, top, x_col, y_col):
     if type_data == 'Tableau':
@@ -124,7 +120,7 @@ def calculateDiversity(df):
 
     return nb_tracks_listened, nb_unique_tracks_listened, ratio_repetition, ratio_diversite
 
-def stat_card(title, value, description):
+def statCard(title, value, description):
     st.markdown(
         f"""<div style="background: #dddde0;border: 1px solid rgba(162, 56, 255, 0.18);border-radius: 14px;padding: 18px 20px;margin-bottom: 12px;box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);">
               <div style="color: #6a6a82;font-size: 0.75rem;text-transform: uppercase;letter-spacing: 0.06em;margin-bottom: 4px;">{title}</div>
@@ -152,13 +148,13 @@ def favoriteSongs(sheet):
 
     k1, k2 = st.columns(2, gap = "medium")
     with k1:
-        stat_card(
+        statCard(
             title = "Titres likés",
-            value = f"{nb_morceaux:,}", 
+            value = f"{nb_morceaux:,}",
             description = "morceaux favoris"
         )
     with k2:
-        stat_card(
+        statCard(
             title = "Artistes",
             value = f"{nb_artistes:,}",
             description = "artistes différents"
@@ -166,13 +162,13 @@ def favoriteSongs(sheet):
 
     k1, k2 = st.columns(2, gap = "medium")
     with k1:
-        stat_card(
+        statCard(
             title = "Albums",
             value = f"{nb_albums:,}",
             description = "albums différents"
         )
     with k2:
-        stat_card(
+        statCard(
             title = "Diversité des artistes",
             value = ratio_div,
             description = "% d'artistes différents"

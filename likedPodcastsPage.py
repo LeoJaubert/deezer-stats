@@ -1,17 +1,17 @@
 import base64
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import streamlit as st
 import requests
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 #API call to obtain infos about podcast
 @st.cache_data(show_spinner = False)
-def get_podcast_info_from_id(podcast_link):
+def getPodcastInfoFromId(podcast_link):
     try:
         podcast_id = podcast_link.rstrip('/').split('/')[-1]
         url = f"https://api.deezer.com/podcast/{podcast_id}"
-        response = requests.get(url)
+        response = requests.get(url, timeout = 10)
         data = response.json()
-        
+
         fans = int(data.get("fans", 0))
 
         return {
@@ -21,14 +21,14 @@ def get_podcast_info_from_id(podcast_link):
             "url": url
         }
 
-    except Exception:
+    except (requests.exceptions.RequestException, KeyError, ValueError):
         return None
 
 #Do all API requests in bulk
 @st.cache_data(show_spinner = False)
-def get_all_podcasts_info(podcast_links: tuple):
+def getAllPodcastsInfo(podcast_links: tuple):
     def fetch(podcast_link):
-        return podcast_link, get_podcast_info_from_id(podcast_link)
+        return podcast_link, getPodcastInfoFromId(podcast_link)
 
     results = {}
     with ThreadPoolExecutor(max_workers=10) as executor:
@@ -39,14 +39,14 @@ def get_all_podcasts_info(podcast_links: tuple):
     return results
 
 #Function needed to use placeholder in HTML
-def get_base64_image(path):
+def getBase64Image(path):
     with open(path, "rb") as f:
         data = f.read()
     return base64.b64encode(data).decode()
 
 #Popup appearing when clicking on the button containing infos about podcast
 @st.dialog("Détails du podcast")
-def show_podcast_modal(podcast, link, podcast_info):
+def showPodcastModal(podcast, link, podcast_info):
     st.markdown(f"""
         # 🗨 {podcast}
         🧑 **Fans** : {podcast_info['fans_formatted']}\n
@@ -77,25 +77,26 @@ def likedPodcasts(sheet):
     st.title("💬 Podcasts likés", anchor = False)
     st.markdown("---")
 
-    podcastsDict = {}
+    podcasts_dict = {}
     for i in range(len(df)):
         podcast = df.iloc[i]["Podcast Name"]
         link = df.iloc[i]["Link"]
-        podcastsDict[podcast] = link
+        podcasts_dict[podcast] = link
 
+    #Search bar
     search = st.text_input(f"🔎 Rechercher parmi les {len(df)} podcasts :")
     if search:
-        podcastsDict = {k: v for k, v in podcastsDict.items() if search.lower() in k.lower()}
+        podcasts_dict = {k: v for k, v in podcasts_dict.items() if search.lower() in k.lower()}
     #Sort in alphabetical order
-    podcastsDict = dict(sorted(podcastsDict.items(), key=lambda item: item[0].lower()))
+    podcasts_dict = dict(sorted(podcasts_dict.items(), key=lambda item: item[0].lower()))
 
-    img_base64 = get_base64_image("pictures/placeholder-picture.jpg")
+    img_base64 = getBase64Image("pictures/placeholder-picture.jpg")
     placeholder = f"data:image/jpeg;base64,{img_base64}"
 
     #Print 4 by 4 podcasts with their picture and link to their Deezer page
-    podcasts = list(podcastsDict.items())
+    podcasts = list(podcasts_dict.items())
     all_links = tuple(link for _, link in podcasts)
-    podcasts_info = get_all_podcasts_info(all_links)
+    podcasts_info = getAllPodcastsInfo(all_links)
     row_items = 4
     for i in range(0, len(podcasts), row_items):
         cols = st.columns(row_items)
@@ -132,4 +133,4 @@ def likedPodcasts(sheet):
                         use_container_width = True,
                         type = "primary"
                     ):
-                        show_podcast_modal(podcast, link, podcast_info)
+                        showPodcastModal(podcast, link, podcast_info)

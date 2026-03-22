@@ -3,13 +3,16 @@ import pandas as pd
 import streamlit as st
 
 def showAllInfoPage(file_path):
+    st.title("📊 Informations du compte", anchor = False)
+    st.markdown("---")
+
     #Every page that is used for the app with misc info
     sections = [
-        {"sheet": "1_creationData", "title": "📊 Détails du compte Deezer"},
-        {"sheet": "2_customizationData", "title": "🧍 Profil de l'utilisateur"},
-        {"sheet": "3_setupData", "title": "🔔 Notifications"},
-        {"sheet": "12_businessData", "title": "💸 Options de paiement"},
-        {"sheet": "13_navigationData", "title": "📂 Misc"},
+        {"sheet": "1_creationData", "title": "Détails du compte Deezer"},
+        {"sheet": "2_customizationData", "title": "Profil de l'utilisateur"},
+        {"sheet": "3_setupData", "title": "Notifications"},
+        {"sheet": "12_businessData", "title": "Options de paiement"},
+        {"sheet": "13_navigationData", "title": "Misc"},
     ]
 
     liste_colonne_dates = [
@@ -20,8 +23,7 @@ def showAllInfoPage(file_path):
         for section in sections:
             df = pd.read_excel(file_path, sheet_name = section["sheet"])
 
-            st.title(section["title"], anchor = False)
-            st.markdown("---")
+            st.subheader(section["title"], anchor = False)
 
             data_dict = {col: df[col].iloc[0] if len(df) > 0 else "" for col in df.columns}
 
@@ -34,7 +36,7 @@ def showAllInfoPage(file_path):
                     try:
                         date_obj = datetime.strptime(valeur, "%Y-%m-%d")
                         valeur = date_obj.strftime("%d/%m/%Y")
-                    except:
+                    except ValueError:
                         valeur = "N/A"
 
                 if str(valeur) == "True":

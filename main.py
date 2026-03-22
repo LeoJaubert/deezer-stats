@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from pages_display import showAllInfoPage
+from miscPage import showAllInfoPage
 from likedArtistsPage import likedArtists
 from likedAlbumsPage import likedAlbums
 from likedPodcastsPage import likedPodcasts
@@ -9,8 +9,8 @@ from favoriteSongsPage import favoriteSongs
 from listeningHistoryPage import listeningHistory
 
 @st.cache_data(show_spinner = False)
-def loadFile(file_path):
-    file = pd.ExcelFile(file_path)
+def loadFile(fp):
+    file = pd.ExcelFile(fp)
     return {sheet_name: file.parse(sheet_name) for sheet_name in file.sheet_names}
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
-# 🎵 Stats Deezer (french version)
+# Stats Deezer (french version)
 
 Ceci est un projet open-source permettant d'avoir des statistiques plus précises ainsi que des détails concernant votre profil Deezer à partir du fichier Excel récupéré via l'application Deezer.
 
 ---
 
-## 🔰 Features principales
+## Features principales
 
 Ce projet analyse les données d’écoute afin d’identifier :
 
@@ -15,7 +15,7 @@ Ce projet analyse les données d’écoute afin d’identifier :
 
 ---
 
-## ⚙️ Setup
+## Setup
 
 ### Installation
 
@@ -28,13 +28,13 @@ Ce projet analyse les données d’écoute afin d’identifier :
 
 N'hésitez pas à mettre en favori ce projet pour m'aider et me donner des retours sur des points à modifier ou améliorer, version anglaise à venir si ce projet devient populaire.
 
-# 🎵 Deezer Stats (english version)
+# Deezer Stats (english version)
 
 This is an open-source project allowing to have more precise statistics as well as details regarding your Deezer profile from the Excel file retrieved via the Deezer application.
 
 ---
 
-## 🔰 Main features
+## Main features
 
 This project analyzes listening data in order to identify:
 
@@ -45,7 +45,7 @@ This project analyzes listening data in order to identify:
 
 ---
 
-## ⚙️ Setup
+## Setup
 
 ### Installation
 

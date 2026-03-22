@@ -1,15 +1,15 @@
 import base64
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import streamlit as st
 import requests
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 #API call to obtain infos about artist
 @st.cache_data(show_spinner = False)
-def get_artist_info_from_id(artist_link):
+def getArtistInfoFromId(artist_link):
     try:
         artist_id = artist_link.rstrip('/').split('/')[-1]
         url = f"https://api.deezer.com/artist/{artist_id}"
-        response = requests.get(url)
+        response = requests.get(url, timeout = 100)
         data = response.json()
 
         nb_fan = int(data.get("nb_fan", 0))
@@ -21,14 +21,14 @@ def get_artist_info_from_id(artist_link):
             "url": url
         }
 
-    except Exception:
+    except (requests.exceptions.RequestException, KeyError, ValueError):
         return None
 
 #Do all API requests in bulk
 @st.cache_data(show_spinner = False)
-def get_all_artists_info(artist_links: tuple):
+def getAllArtistsInfo(artist_links: tuple):
     def fetch(artist_link):
-        return artist_link, get_artist_info_from_id(artist_link)
+        return artist_link, getArtistInfoFromId(artist_link)
 
     results = {}
     with ThreadPoolExecutor(max_workers=10) as executor:
@@ -39,10 +39,10 @@ def get_all_artists_info(artist_links: tuple):
     return results
 
 #API call to obtain the 5 top songs from tracklist
-def get_top_songs_from_tracklist(url):
+def getTopSongsFromTracklist(url):
     try:
         url = url + "/top?limit=5"
-        response = requests.get(url)
+        response = requests.get(url, timeout = 100)
         data = response.json()
 
         top_songs_dict = {}
@@ -51,7 +51,7 @@ def get_top_songs_from_tracklist(url):
             track_id = track.get("id")
             title = track.get("title")
             link = track.get("link")
- 
+
             top_songs_dict[track_id] = {
                 "title": title,
                 "link": link
@@ -59,18 +59,18 @@ def get_top_songs_from_tracklist(url):
 
         return top_songs_dict
 
-    except:
+    except requests.exceptions.RequestException:
         return None
 
 #Function needed to use placeholder in HTML
-def get_base64_image(path):
+def getBase64Image(path):
     with open(path, "rb") as f:
         data = f.read()
     return base64.b64encode(data).decode()
 
 #Popup appearing when clicking on the button containing infos about artist
 @st.dialog("Détails de l'artiste")
-def show_artist_modal(artist, link, artist_info, top_songs):
+def showArtistModal(artist, link, artist_info, top_songs):
     left_col, right_col = st.columns([1, 1])
 
     with left_col:
@@ -102,7 +102,7 @@ def show_artist_modal(artist, link, artist_info, top_songs):
         st.markdown("## 🔥 Top titres")
 
         #Print the top 5 songs of the artist with a hypertext link
-        for top_song_id, top_song in top_songs.items():
+        for _, top_song in top_songs.items():
             st.write(f"🎵 [{top_song['title']}]({top_song['link']})")
 
 #--------------Code starts here--------------#
@@ -111,27 +111,27 @@ def likedArtists(sheet):
     st.title("🧑‍🎤 Artistes likés", anchor = False)
     st.markdown("---")
 
-    artistsDict = {}
+    artists_dict = {}
     for i in range(len(df)):
         artist = df.iloc[i]["Artist"]
         link = df.iloc[i]["Link"]
-        artistsDict[artist] = link
+        artists_dict[artist] = link
 
     #Search bar
     search = st.text_input(f"🔎 Rechercher parmi les {len(df)} artistes :")
     if search:
-        artistsDict = {k: v for k, v in artistsDict.items() if search.lower() in k.lower()}
+        artists_dict = {k: v for k, v in artists_dict.items() if search.lower() in k.lower()}
 
     #Sort in alphabetical order
-    artistsDict = dict(sorted(artistsDict.items(), key = lambda item: item[0].lower()))
+    artists_dict = dict(sorted(artists_dict.items(), key = lambda item: item[0].lower()))
 
-    img_base64 = get_base64_image("pictures/placeholder-picture.jpg")
+    img_base64 = getBase64Image("pictures/placeholder-picture.jpg")
     placeholder = f"data:image/jpeg;base64,{img_base64}"
 
     #Print 4 by 4 artists with their picture
-    artists = list(artistsDict.items())
+    artists = list(artists_dict.items())
     all_links = tuple(link for _, link in artists)
-    artists_info = get_all_artists_info(all_links)
+    artists_info = getAllArtistsInfo(all_links)
     row_items = 4
     for i in range(0, len(artists), row_items):
         cols = st.columns(row_items)
@@ -169,5 +169,5 @@ def likedArtists(sheet):
                         use_container_width = True,
                         type = "primary"
                     ):
-                        top_songs = get_top_songs_from_tracklist(url)
-                        show_artist_modal(artist, link, artist_info, top_songs)
+                        top_songs = getTopSongsFromTracklist(url)
+                        showArtistModal(artist, link, artist_info, top_songs)

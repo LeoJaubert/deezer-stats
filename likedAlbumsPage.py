@@ -1,10 +1,10 @@
 import base64
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import streamlit as st
 import requests
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def format_duration(seconds):
+def formatDuration(seconds):
     minutes = seconds // 60
     hours = minutes // 60
     minutes = minutes % 60
@@ -13,18 +13,17 @@ def format_duration(seconds):
         if minutes == 0:
             return f"{hours} heure" if hours == 1 else f"{hours} heures"
         return f"{hours} heure {minutes} minutes" if hours == 1 else f"{hours} heures {minutes} minutes"
-    else:
-        return f"{minutes} minute" if minutes == 1 else f"{minutes} minutes"
+    return f"{minutes} minute" if minutes == 1 else f"{minutes} minutes"
 
 #API call to obtain infos about album
 @st.cache_data(show_spinner = False)
-def get_album_info_from_id(album_link):
+def getAlbumInfoFromId(album_link):
     try:
         album_id = album_link.rstrip('/').split('/')[-1]
         url = f"https://api.deezer.com/album/{album_id}"
-        response = requests.get(url)
+        response = requests.get(url, timeout = 10)
         data = response.json()
-        
+
         main_artists = []
 
         for contributor in data["contributors"]:
@@ -41,20 +40,20 @@ def get_album_info_from_id(album_link):
             "img_url": data["cover_medium"],
             "nb_tracks": int(data["nb_tracks"]),
             "fans_formatted": f"{fans:,}",
-            "duration_formatted": format_duration(duration),
+            "duration_formatted": formatDuration(duration),
             "release_date_formatted": datetime.strptime(release_date, "%Y-%m-%d").strftime("%d/%m/%Y"),
             "artists": artists_str,
             "url": url
         }
 
-    except Exception:
+    except (requests.exceptions.RequestException, KeyError, ValueError):
         return None
 
 #Do all API requests in bulk
 @st.cache_data(show_spinner = False)
-def get_all_albums_info(album_links: tuple):
+def getAllAlbumsInfo(album_links: tuple):
     def fetch(album_link):
-        return album_link, get_album_info_from_id(album_link)
+        return album_link, getAlbumInfoFromId(album_link)
 
     results = {}
     with ThreadPoolExecutor(max_workers=10) as executor:
@@ -65,15 +64,15 @@ def get_all_albums_info(album_links: tuple):
     return results
 
 #Function needed to use placeholder in HTML
-def get_base64_image(path):
+def getBase64Image(path):
     with open(path, "rb") as f:
         data = f.read()
     return base64.b64encode(data).decode()
 
 #API call to obtain the tracklist from album
-def get_tracklist_from_album(url):
+def getTracklistFromAlbum(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout = 10)
         data = response.json()
 
         tracklist_dict = {}
@@ -90,12 +89,12 @@ def get_tracklist_from_album(url):
 
         return tracklist_dict
 
-    except:
+    except requests.exceptions.RequestException:
         return None
 
 #Popup appearing when clicking on the button containing infos about album
 @st.dialog("Détails de l'album")
-def show_album_modal(album, link, album_info, tracklist):
+def showAlbumModal(album, link, album_info, tracklist):
 
     left_col, right_col = st.columns([1, 1])
 
@@ -137,7 +136,7 @@ def show_album_modal(album, link, album_info, tracklist):
             tracks.append((None, None))
 
         #Print 5 first songs of album, or else print blank space to fill
-        for track_id, track in tracks[:5]:
+        for _, track in tracks[:5]:
             if track:
                 st.write(f"🎵 [{track['title']}]({track['link']})")
             else:
@@ -157,27 +156,27 @@ def likedAlbums(sheet):
     st.title("💿 Albums likés", anchor = False)
     st.markdown("---")
 
-    albumsDict = {}
+    albums_dict = {}
     for i in range(len(df)):
         album = df.iloc[i]["Album Title"]
         link = df.iloc[i]["Link"]
-        albumsDict[album] = link
+        albums_dict[album] = link
 
-    # Barre de recherche
+    #Search bar
     search = st.text_input(f"🔎 Rechercher parmi les {len(df)} albums :")
     if search:
-        albumsDict = {k: v for k, v in albumsDict.items() if search.lower() in k.lower()}
+        albums_dict = {k: v for k, v in albums_dict.items() if search.lower() in k.lower()}
 
     #Sort in alphabetical order
-    albumsDict = dict(sorted(albumsDict.items(), key=lambda item: item[0].lower()))
+    albums_dict = dict(sorted(albums_dict.items(), key=lambda item: item[0].lower()))
 
-    img_base64 = get_base64_image("pictures/placeholder-picture.jpg")
+    img_base64 = getBase64Image("pictures/placeholder-picture.jpg")
     placeholder = f"data:image/jpeg;base64,{img_base64}"
 
     #Print 4 by 4 albums with their picture and link to their Deezer page
-    albums = list(albumsDict.items())
+    albums = list(albums_dict.items())
     all_links = tuple(link for _, link in albums)
-    albums_info = get_all_albums_info(all_links)
+    albums_info = getAllAlbumsInfo(all_links)
     row_items = 4
     for i in range(0, len(albums), row_items):
         cols = st.columns(row_items)
@@ -215,5 +214,5 @@ def likedAlbums(sheet):
                         use_container_width = True,
                         type = "primary"
                     ):
-                        tracklist = get_tracklist_from_album(url)
-                        show_album_modal(album, link, album_info, tracklist)
+                        tracklist = getTracklistFromAlbum(url)
+                        showAlbumModal(album, link, album_info, tracklist)

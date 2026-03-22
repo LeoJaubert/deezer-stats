@@ -168,14 +168,13 @@ def calculateTopAlbums(df, year_chosen):
 def colorTopRows(row):
     if row.name == 0:
         return ["background-color: #FFD700"] * len(row)
-    elif row.name == 1:
+    if row.name == 1:
         return ["background-color: #C0C0C0"] * len(row)
-    elif row.name == 2:
+    if row.name == 2:
         return ["background-color: #CD7F32"] * len(row)
-    elif row.name >= 3 and row.name <= 9:
+    if row.name >= 3 and row.name <= 9:
         return ["background-color: #D9ADFF"] * len(row)
-    else:
-        return [""] * len(row)
+    return [""] * len(row)
 
 def printData(type_data, top, x_col, y_col_1, y_col_2):
     if type_data == 'Tableau':
@@ -441,7 +440,7 @@ def calculateDiversity(df, year_chosen):
 
     return nb_tracks_listened, nb_unique_tracks_listened, ratio_repetition, ratio_diversite
 
-def stat_card(title, value, description):
+def statCard(title, value, description):
     st.markdown(
         f"""<div style="background: #dddde0;border: 1px solid rgba(162, 56, 255, 0.18);border-radius: 14px;padding: 18px 20px;margin-bottom: 12px;box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);">
               <div style="color: #6a6a82;font-size: 0.75rem;text-transform: uppercase;letter-spacing: 0.06em;margin-bottom: 4px;">{title}</div>
@@ -483,13 +482,13 @@ def listeningHistory(sheet):
     #Display listening time and number of listened tracks
     k1, k2 = st.columns(2, gap = "medium")
     with k1:
-        stat_card(
+        statCard(
             title = "Temps d'écoute",
             value = totalhours,
             description = f"heures, soit {totaldays} jours et {modulototaldays} heures"
         )
     with k2:
-        stat_card(
+        statCard(
             title = "Morceaux",
             value = f"{nb_tracks:,}".replace(",", " "),
             description = "titres écoutés"
@@ -498,13 +497,13 @@ def listeningHistory(sheet):
     #Display day with most listening time and diversity of listened tracks
     k1, k2 = st.columns(2, gap = "medium")
     with k1:
-        stat_card(
+        statCard(
             title = "Jour le plus écouté",
             value = most_day,
             description = f"{tracks_val} morceaux - {minutes_val} minutes"
         )
     with k2:
-        stat_card(
+        statCard(
             title = "Diversité",
             value = ratio_div,
             description = "% de morceaux écoutés une seule fois"
@@ -513,13 +512,13 @@ def listeningHistory(sheet):
     #Display stats about diversity
     k1, k2 = st.columns(2, gap = "medium")
     with k1:
-        stat_card(
+        statCard(
             title = "Ratio répétition",
             value = ratio_rep,
             description = "écoutes d'un même morceau en moyenne"
         )
     with k2:
-        stat_card(
+        statCard(
             title = "Morceaux uniques",
             value = nb_unique,
             description = "titres écoutés une seule fois"
@@ -528,13 +527,13 @@ def listeningHistory(sheet):
     #Display first and last track listened
     k1, k2 = st.columns(2, gap = "medium")
     with k1:
-        stat_card(
+        statCard(
             title = "Premier morceau écouté",
             value = ft_title,
             description = f"de {ft_artist} - {ft_date}"
         )
     with k2:
-        stat_card(
+        statCard(
             title = "Dernier morceau écouté",
             value = lt_title,
             description = f" de {lt_artist} - {lt_date}"

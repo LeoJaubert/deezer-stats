@@ -1,9 +1,9 @@
 import base64
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import streamlit as st
 import requests
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def format_duration(seconds):
+def formatDuration(seconds):
     minutes = seconds // 60
     hours = minutes // 60
     minutes = minutes % 60
@@ -12,18 +12,17 @@ def format_duration(seconds):
         if minutes == 0:
             return f"{hours} heure" if hours == 1 else f"{hours} heures"
         return f"{hours} heure {minutes} minutes" if hours == 1 else f"{hours} heures {minutes} minutes"
-    else:
-        return f"{minutes} minute" if minutes == 1 else f"{minutes} minutes"
+    return f"{minutes} minute" if minutes == 1 else f"{minutes} minutes"
 
 #API call to obtain infos about playlist
 @st.cache_data(show_spinner = False)
-def get_playlist_info_from_id(playlist_link):
+def getPlaylistInfoFromId(playlist_link):
     try:
         playlist_id = playlist_link.rstrip('/').split('/')[-1]
         url = f"https://api.deezer.com/playlist/{playlist_id}"
-        response = requests.get(url)
+        response = requests.get(url, timeout = 10)
         data = response.json()
-        
+
         fans = int(data.get("fans", 0))
         duration = int(data.get("duration", 0))
 
@@ -31,19 +30,19 @@ def get_playlist_info_from_id(playlist_link):
             "img_url": data["picture_medium"],
             "nb_tracks": data["nb_tracks"],
             "fans_formatted": f"{fans:,}",
-            "duration_formatted": format_duration(duration),
+            "duration_formatted": formatDuration(duration),
             "description": data["description"],
             "url": url
         }
 
-    except Exception:
+    except (requests.exceptions.RequestException, KeyError, ValueError):
         return None
 
 #Do all API requests in bulk
 @st.cache_data(show_spinner = False)
-def get_all_playlists_info(playlist_links: tuple):
+def getAllPlaylistsInfo(playlist_links: tuple):
     def fetch(playlist_link):
-        return playlist_link, get_playlist_info_from_id(playlist_link)
+        return playlist_link, getPlaylistInfoFromId(playlist_link)
 
     results = {}
     with ThreadPoolExecutor(max_workers=10) as executor:
@@ -54,15 +53,15 @@ def get_all_playlists_info(playlist_links: tuple):
     return results
 
 #Function needed to use placeholder in HTML
-def get_base64_image(path):
+def getBase64Image(path):
     with open(path, "rb") as f:
         data = f.read()
     return base64.b64encode(data).decode()
 
 #API call to obtain the first 5 songs of playlist
-def get_first_songs_of_playlist(url):
+def getFirstSongsOfPlaylist(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout = 10)
         data = response.json()
 
         first_songs_dict = {}
@@ -79,12 +78,12 @@ def get_first_songs_of_playlist(url):
 
         return first_songs_dict
 
-    except:
+    except requests.exceptions.RequestException:
         return None
 
 #Popup appearing when clicking on the button containing infos about playlist
 @st.dialog("Détails de la playlist")
-def show_playlist_modal(playlist, link, playlist_info, first_songs):
+def showPlaylistModal(playlist, link, playlist_info, first_songs):
 
     left_col, right_col = st.columns([1, 1])
 
@@ -119,7 +118,7 @@ def show_playlist_modal(playlist, link, playlist_info, first_songs):
         st.markdown("## 🔥 Derniers titres")
 
         #Print the last 5 songs of the playlist with a hypertext link
-        for top_song_id, song in first_songs.items():
+        for _, song in first_songs.items():
             st.write(f"🎵 [{song['title']}]({song['link']})")
 
 #--------------Code starts here--------------#
@@ -128,25 +127,26 @@ def likedPlaylists(sheet):
     st.title("🎶 Playlists likées", anchor = False)
     st.markdown("---")
 
-    playlistsDict = {}
+    playlists_dict = {}
     for i in range(len(df)):
         playlist = df.iloc[i]["Playlist Title"]
         link = df.iloc[i]["Link"]
-        playlistsDict[playlist] = link
+        playlists_dict[playlist] = link
 
+    #Search bar
     search = st.text_input(f"🔎 Rechercher parmi les {len(df)} playlists :")
     if search:
-        playlistsDict = {k: v for k, v in playlistsDict.items() if search.lower() in k.lower()}
+        playlists_dict = {k: v for k, v in playlists_dict.items() if search.lower() in k.lower()}
     #Sort in alphabetical order
-    playlistsDict = dict(sorted(playlistsDict.items(), key=lambda item: item[0].lower()))
+    playlists_dict = dict(sorted(playlists_dict.items(), key=lambda item: item[0].lower()))
 
-    img_base64 = get_base64_image("pictures/placeholder-picture.jpg")
+    img_base64 = getBase64Image("pictures/placeholder-picture.jpg")
     placeholder = f"data:image/jpeg;base64,{img_base64}"
 
     #Print 4 by 4 playlists with their picture and link to their Deezer page
-    playlists = list(playlistsDict.items())
+    playlists = list(playlists_dict.items())
     all_links = tuple(link for _, link in playlists)
-    playlists_info = get_all_playlists_info(all_links)
+    playlists_info = getAllPlaylistsInfo(all_links)
     row_items = 4
     for i in range(0, len(playlists), row_items):
         cols = st.columns(row_items)
@@ -184,5 +184,5 @@ def likedPlaylists(sheet):
                         use_container_width = True,
                         type = "primary"
                     ):
-                        top_songs = get_first_songs_of_playlist(url)
-                        show_playlist_modal(playlist, link, playlist_info, top_songs)
+                        top_songs = getFirstSongsOfPlaylist(url)
+                        showPlaylistModal(playlist, link, playlist_info, top_songs)
