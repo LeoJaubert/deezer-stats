@@ -1,64 +1,76 @@
-# Stats Deezer (french version)
+# Deezer Stats
 
-Ceci est un projet open-source permettant d'avoir des statistiques plus précises ainsi que des détails concernant votre profil Deezer à partir du fichier Excel récupéré via l'application Deezer.
+![License](https://img.shields.io/badge/license-MIT-blue) ![Python](https://img.shields.io/badge/python-3+-blue?logo=python&logoColor=white) ![Streamlit](https://img.shields.io/badge/built%20with-Streamlit-ff4b4b?logo=streamlit&logoColor=white) ![GitHub repo size](https://img.shields.io/github/repo-size/LeoJaubert/deezer-stats)
 
----
 
-## Features principales
-
-Ce projet analyse les données d’écoute afin d’identifier :
-
-* les **artistes, albums & playlists likées**
-* les **morceaux & artistes les plus écoutés**
-* le **profil complet de l'utilisateur**
-* plein d'autres statistiques
+> Visualisez vos statistiques d'écoute Deezer — artistes, albums, morceaux et bien plus — à partir de vos données personnelles exportées.
 
 ---
 
-## Setup
+## Fonctionnalités
 
-### Installation
-
-0. Télécharger les données personnelles de son compte sur Deezer.
-1. Cloner le dépôt Github et le mettre quelque part sur votre PC.
-2. A l'endroit du projet, faire la commande ```pip install -r requirements.txt``` pour installer les librairies nécessaires.
-3. Lancer l'application avec la commande ```streamlit run main.py```.
-
----
-
-N'hésitez pas à mettre en favori ce projet pour m'aider et me donner des retours sur des points à modifier ou améliorer, version anglaise à venir si ce projet devient populaire.
-
-# Deezer Stats (english version)
-
-This is an open-source project allowing to have more precise statistics as well as details regarding your Deezer profile from the Excel file retrieved via the Deezer application.
+- **Artistes & albums les plus écoutés**
+- **Morceaux favoris** et tendances d'écoute
+- **Artistes, albums & playlists likés**
+- **Profil complet de l'utilisateur**
+- Plein d'autres statistiques détaillées
 
 ---
 
-## Main features
+## Installation
 
-This project analyzes listening data in order to identify:
+### 1. Exporter vos données Deezer
 
-* the **artists, albums & liked playlists**
-* the **most listened-to songs & artists**
-* the **user’s full profile**
-* lots of other statistics
+Rendez-vous dans les paramètres de votre compte Deezer via PC → *Paramètres du compte* → *Mes informations* → *Mes données personnelles*. Vous recevrez un fichier Excel par email.
+
+### 2. Cloner le dépôt
+
+```bash
+git clone https://github.com/LeoJaubert/deezer-stats.git
+cd deezer-stats
+```
+
+### 3. Installer les dépendances
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Lancer l'application
+
+```bash
+streamlit run main.py
+```
+
+L'application s'ouvre automatiquement dans votre navigateur à l'adresse `http://localhost:8501`.
 
 ---
 
-## Setup
+## Stack technique
 
-### Installation
-
-0. Download the personal data of your account on Deezer.
-1. Clone the Github repository and put it somewhere on your PC.
-2. At the location of the project, make the command ```pip install -r requirements.txt``` to install the necessary libraries.
-3. Launch the application with the command ```streamlit run main.py```.
+- [Python 3.8+](https://www.python.org/)
+- [Streamlit](https://streamlit.io/) — interface web
+- [Pandas](https://pandas.pydata.org/) — traitement des données
+- [NumPy](https://numpy.org/) — calculs numériques
+- [Altair](https://altair-viz.github.io/) — visualisations graphiques
+- [Requests](https://requests.readthedocs.io/) — appels API
 
 ---
 
-Do not hesitate to bookmark this project to help me and give me feedback on points to edit or improve, english version soon if it becomes popular.
+## Contribuer
 
+Les contributions sont les bienvenues ! Pour proposer une amélioration :
 
---------------------------
-© 2026 Leo Jaubert - All rights reserved.
-Reuse, modification or redistribution without credit is prohibited.
+1. Forkez le projet
+2. Créez une branche (`git checkout -b feature/ma-feature`)
+3. Committez vos changements (`git commit -m 'feat: ajout de X'`)
+4. Poussez la branche (`git push origin feature/ma-feature`)
+5. Ouvrez une Pull Request
+
+N'hésitez pas à ouvrir une [issue](https://github.com/LeoJaubert/deezer-stats/issues) pour signaler un bug ou suggérer une fonctionnalité.
+
+---
+
+## Licence
+
+Ce projet est distribué sous licence [MIT](LICENSE) — libre d'utilisation, de modification et de distribution avec attribution.
