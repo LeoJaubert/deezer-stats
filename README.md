@@ -57,3 +57,8 @@ This project analyzes listening data in order to identify:
 ---
 
 Do not hesitate to bookmark this project to help me and give me feedback on points to edit or improve, english version soon if it becomes popular.
+
+
+--------------------------
+© 2026 Leo Jaubert - All rights reserved.
+Reuse, modification or redistribution without credit is prohibited.
