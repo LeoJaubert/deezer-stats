@@ -42,6 +42,10 @@ L'application s'ouvre automatiquement dans votre navigateur à l'adresse `http:/
 
 ## Stack technique
 
+Outil de gestion d'environnement Python:
+- [uv](https://docs.astral.sh/uv/) - Poetry mais en Rust
+
+Librairies Python
 - [Python 3.8+](https://www.python.org/)
 - [Streamlit](https://streamlit.io/) — interface web
 - [Pandas](https://pandas.pydata.org/) — traitement des données
