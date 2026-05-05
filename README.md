@@ -30,16 +30,10 @@ git clone https://github.com/LeoJaubert/deezer-stats.git
 cd deezer-stats
 ```
 
-### 3. Installer les dépendances
+### 3. Lancer l'application
 
 ```bash
-pip install -r requirements.txt
-```
-
-### 4. Lancer l'application
-
-```bash
-streamlit run main.py
+uv run streamlit run main.py
 ```
 
 L'application s'ouvre automatiquement dans votre navigateur à l'adresse `http://localhost:8501`.
@@ -48,6 +42,10 @@ L'application s'ouvre automatiquement dans votre navigateur à l'adresse `http:/
 
 ## Stack technique
 
+Outil de gestion d'environnement Python:
+- [uv](https://docs.astral.sh/uv/) - Poetry mais en Rust
+
+Librairies Python
 - [Python 3.8+](https://www.python.org/)
 - [Streamlit](https://streamlit.io/) — interface web
 - [Pandas](https://pandas.pydata.org/) — traitement des données
